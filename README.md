@@ -24,6 +24,10 @@ just greyed out, check the “Hide filtered jobs completely” checkbox.
 
 Remember to click Save when you're done editing the options.
 
+Note that the options are saved in synchronized storage, so if you
+have sync turned on in Chrome, the options are synchronized across all
+the Chrome profiles synchronizing via the same Google account.
+
 Documenting how to write regular expressions is beyond the scope of
 this document; [here][1] is one of the many online tutorials about
 this.

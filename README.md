@@ -1,15 +1,15 @@
 # LinkedIn Jobs Filterer Chrome Extension
 
-LinkedIn’s “recommended jobs” and job search functionality are pretty
+LinkedIn's "recommended jobs” and job search functionality are pretty
 good at finding jobs you might be interested in, but unfortunately
-they’re pretty bad at finding *only* jobs you might be interested in,
-i.e., they show you many jobs you don’t care about. Furthermore,
+they're pretty bad at finding *only* jobs you might be interested in,
+i.e., they show you many jobs you don't care about. Furthermore,
 although there are buttons you can click to supposedly tell LinkedIn
 not to show you a particular job again, it frequently ignores this.
 
 The code here implements a Chrome extension which allows you to
 improve the quality of these lists of jobs by filtering out jobs you
-don’t want to see based on regular-expression matches on the job
+don't want to see based on regular-expression matches on the job
 title, company name, or location.
 
 You can install this extension from the Chrome Web Store at [TBD]. You

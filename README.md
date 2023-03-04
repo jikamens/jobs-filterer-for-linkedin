@@ -12,7 +12,8 @@ improve the quality of these lists of jobs by filtering out jobs you
 don’t want to see based on regular-expression matches on the job
 title, company name, or location.
 
-You can install this extension from the Chrome Web Store at [TBD].
+You can install this extension from the Chrome Web Store at [TBD]. You
+can also install it from the source code as described below.
 
 Once you've installed it, open the options page for the extension and
 enter the regular expressions you want to filter with, one per line,
@@ -37,11 +38,22 @@ extension useful, you can buy me a coffee [here][2].
 
 The source code for this extension lives [here][3].
 
-## Developing
+## Installing from source code
 
-To load the unpacked extension into Chrome, you should run "`make
-unpacked`" in this directory and then select the "local" subdirectory
-in Chrome as the directory from which to load the unpacked extension.
+To load this extension into Chrome from source code:
+
+1. Download the source code from Github to your computer, either by
+   cloning it with Git or by downloading and unpacking
+   [this zip file][zip].
+
+2. Paste "`chrome://extensions`" into your URL bar.
+
+3. If the "Developer mode" switch in the upper right corner isn't
+   enabled, enable it.
+
+4. Click the "Load unpacked button".
+
+5. Select the directory containing the extension's source code.
 
 ## Copyright
 
@@ -62,3 +74,4 @@ along with this program. If not, see [here][4].
 [2]: https://blog.kamens.us/support-my-blog
 [3]: https://github.com/jikamens/linkedin-job-filterer
 [4]: https://www.gnu.org/licenses/
+[zip]: https://github.com/jikamens/linkedin-job-filterer/archive/refs/heads/main.zip

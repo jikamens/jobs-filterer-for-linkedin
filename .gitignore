@@ -1,4 +1,2 @@
-*.pem
-dist
-local
-pubkey.json
+*.zip
+build

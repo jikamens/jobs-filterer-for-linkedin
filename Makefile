@@ -1,32 +1,31 @@
 NAME=LinkedInJobsFilterer
+#
+# The first time this extension was uploaded to the Chrome Web Store the
+# private key was included in it but it doesn't need to be after that and I
+# don't want to keep it in the source tree both because it's a security issue
+# and Chrome complains about unpacked extensions with private key files in
+# their directories.
+#
+#PRIVATE_KEY=key.pem
 FILES=content-script.js manifest.json options.html options.js \
-	icons/16.png icons/48.png icons/128.png \
-	$(wildcard key.pem)
+	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
 
-all: dist/$(NAME).zip unpacked
+all: $(NAME).zip
 
-dist/$(NAME).zip: $(FILES)
-	@mkdir -p dist
+$(NAME).zip: $(foreach f,$(FILES),build/$(f))
+	rm -f build/$@.tmp
+	cd build && zip -r $@.tmp $(FILES)
+	mv -f build/$@.tmp $@
+
+build/manifest.json: manifest.json
+	@mkdir -p build
 	rm -f $@.tmp
-	zip -r $@.tmp $(FILES)
-	mv -f $@.tmp $@
-
-unpacked: $(foreach f,$(filter-out key.pem,$(FILES)),local/$(f))
-
-local/manifest.json: manifest.json pubkey.json
-	@mkdir -p local
-	rm -f $@.tmp
-	jq -s '.[0] * .[1]' $^ > $@.tmp
+	grep -v '"key"' $< > $@.tmp
 	mv $@.tmp $@
 
-local/%: %
+build/%: %
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-pubkey.json: key.pub
-	rm -f $@.tmp
-	echo '{"key": "$(shell grep -v '^-' key.pub | tr -d '\n')"}' > $@.tmp
-	mv -f $@.tmp $@
-
 clean:
-	rm -rf dist local pubkey.json
+	rm -rf $(NAME).zip build

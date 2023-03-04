@@ -15,23 +15,25 @@ title, company name, or location.
 You can install this extension from the Chrome Web Store at [TBD]. You
 can also install it from the source code as described below.
 
-Once you've installed it, open the options page for the extension and
-enter the regular expressions you want to filter with, one per line,
-in the text boxes. *Do not enclose your regular expressions in
-slashes* like you would if you were writing them in JavaScript.
+Once you've installed the extension, open the options page for the
+extension to configure it and see further instructions for how to use
+it. There are four ways to open the options page for the extension:
 
-If you would like filtered jobs to be hidden completely rather than
-just greyed out, check the “Hide filtered jobs completely” checkbox.
+1. Paste
+   "`chrome-extension://afjdfegpgbfjgdelebopglhhfkjjblch/options.html`"
+   into the URL bar in Chrome.
 
-Remember to click Save when you're done editing the options.
+2. If you have the extension's icon pinned to your URL bar,
+   right-click or ctrl-click on it and select "Options".
 
-Note that the options are saved in synchronized storage, so if you
-have sync turned on in Chrome, the options are synchronized across all
-the Chrome profiles synchronizing via the same Google account.
+3. If you don't have the extension's icon pinned to your URL bar,
+   click on the puzzle-piece icon to bring up the list of unpinned
+   extensions, then click the three dots to the right of ths one and
+   select "Options".
 
-Documenting how to write regular expressions is beyond the scope of
-this document; [here][1] is one of the many online tutorials about
-this.
+4. Paste "`chrome://settings`" into the URL bar, click the "Details"
+   button for this extension, and then click the button to the right
+   of "Extension options".
 
 This extension was written by Jonathan Kamens. If you find this
 extension useful, you can buy me a coffee [here][2].
@@ -70,7 +72,6 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see [here][4].
 
-[1]: https://developer.mozilla.org/docs/Web/JavaScript/Guide/Regular_Expressions
 [2]: https://blog.kamens.us/support-my-blog
 [3]: https://github.com/jikamens/linkedin-job-filterer
 [4]: https://www.gnu.org/licenses/

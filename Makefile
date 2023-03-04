@@ -11,7 +11,7 @@ dist/$(NAME).zip: $(FILES)
 	zip -r $@.tmp $(FILES)
 	mv -f $@.tmp $@
 
-unpacked: $(foreach f,$(FILES),local/$(f))
+unpacked: $(foreach f,$(filter-out key.pem,$(FILES)),local/$(f))
 
 local/manifest.json: manifest.json pubkey.json
 	@mkdir -p local

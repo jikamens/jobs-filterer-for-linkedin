@@ -36,9 +36,9 @@ it. There are four ways to open the options page for the extension:
    of "Extension options".
 
 This extension was written by Jonathan Kamens. If you find this
-extension useful, you can buy me a coffee [here][2].
+extension useful, you can buy me a coffee [here][blog].
 
-The source code for this extension lives [here][3].
+The source code for this extension lives [here][github].
 
 ## Installing from source code
 
@@ -70,9 +70,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program. If not, see [here][4].
+along with this program. If not, see [here][gpl].
 
-[2]: https://blog.kamens.us/support-my-blog
-[3]: https://github.com/jikamens/linkedin-job-filterer
-[4]: https://www.gnu.org/licenses/
+[blog]: https://blog.kamens.us/support-my-blog
+[github]: https://github.com/jikamens/linkedin-job-filterer
+[gpl]: https://www.gnu.org/licenses/
 [zip]: https://github.com/jikamens/linkedin-job-filterer/archive/refs/heads/main.zip

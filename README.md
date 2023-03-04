@@ -19,9 +19,8 @@ enter the regular expressions you want to filter with, one per line,
 in the text boxes. *Do not enclose your regular expressions in
 slashes* like you would if you were writing them in JavaScript.
 
-If you would like the filtered jobs to be hidden completely rather
-than just greyed out, check the “Hide filtered jobs completely”
-checkbox.
+If you would like filtered jobs to be hidden completely rather than
+just greyed out, check the “Hide filtered jobs completely” checkbox.
 
 Remember to click Save when you're done editing the options.
 

@@ -37,6 +37,12 @@ extension useful, you can buy me a coffee [here][2].
 
 The source code for this extension lives [here][3].
 
+## Developing
+
+To load the unpacked extension into Chrome, you should run "`make
+unpacked`" in this directory and then select the "local" subdirectory
+in Chrome as the directory from which to load the unpacked extension.
+
 ## Copyright
 
 This program is free software: you can redistribute it and/or modify

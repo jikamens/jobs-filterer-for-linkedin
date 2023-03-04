@@ -1,2 +1,4 @@
 *.pem
 dist
+local
+pubkey.json

@@ -7,14 +7,14 @@ i.e., they show you many jobs you don’t care about. Furthermore,
 although there are buttons you can click to supposedly tell LinkedIn
 not to show you a particular job again, it frequently ignores this.
 
-The code here implements a Chrome extension’s which allows you to
+The code here implements a Chrome extension which allows you to
 improve the quality of these lists of jobs by filtering out jobs you
 don’t want to see based on regular-expression matches on the job
 title, company name, or location.
 
 You can install this extension from the Chrome Web Store at [TBD].
 
-Once you've installed it, open the options page for the extension,
+Once you've installed it, open the options page for the extension and
 enter the regular expressions you want to filter with, one per line,
 in the text boxes. *Do not enclose your regular expressions in
 slashes* like you would if you were writing them in JavaScript.

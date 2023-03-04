@@ -12,7 +12,7 @@ improve the quality of these lists of jobs by filtering out jobs you
 don't want to see based on regular-expression matches on the job
 title, company name, or location.
 
-You can install this extension from the Chrome Web Store at [TBD]. You
+You can install this extension from the [Chrome Web Store][cws]. You
 can also install it from the source code as described below.
 
 Once you've installed the extension, open the options page for the
@@ -72,6 +72,7 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see [here][gpl].
 
+[cws]: https://chrome.google.com/webstore/detail/linkedin-jobs-filterer/afjdfegpgbfjgdelebopglhhfkjjblch/
 [blog]: https://blog.kamens.us/support-my-blog
 [github]: https://github.com/jikamens/linkedin-job-filterer
 [gpl]: https://www.gnu.org/licenses/

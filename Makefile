@@ -1,5 +1,6 @@
 NAME=LinkedInJobsFilterer
-FILES=content-script.js manifest.json options.html options.js
+FILES=content-script.js manifest.json options.html options.js \
+	$(wildcard key.pem)
 
 dist/$(NAME).zip: $(FILES)
 	mkdir -p dist

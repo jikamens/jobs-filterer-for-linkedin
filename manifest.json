@@ -3,7 +3,7 @@
     "description": "Filter jobs you don't want to see from LinkedIn search results and recommended jobs.",
     "version": "0.1",
     "manifest_version": 3,
-    "permissions": ["activeTab", "scripting", "storage"],
+    "permissions": ["scripting", "storage"],
     "content_scripts": [
         {
             "matches": ["https://www.linkedin.com/*"],

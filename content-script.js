@@ -31,10 +31,10 @@ function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
             button.addEventListener("click", handleButtonClick);
         return;
     }
-    if (options["hideJobs"])
-        elt.hidden = true;
     if (button)
         button.click();
+    if (options["hideJobs"])
+        elt.hidden = true;
 }
 
 function classMatches(classes, regexps, elt) {

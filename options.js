@@ -142,5 +142,6 @@ function restoreOptions() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', restoreOptions);
-document.getElementById('save').addEventListener('click', saveOptions);
+document.addEventListener("DOMContentLoaded", restoreOptions);
+document.getElementById("save").addEventListener("click", saveOptions);
+document.getElementById("hideJobs").addEventListener("change", saveOptions);

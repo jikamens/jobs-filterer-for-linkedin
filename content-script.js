@@ -20,8 +20,9 @@ const titleClasses = ["job-card-list__title"];
 const locationClasses = ["job-card-container__metadata-item"];
 const allClasses = companyClasses.concat(titleClasses, locationClasses);
 
-function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
-                     elt) {
+var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs;
+
+function filterOneJob(elt) {
     var button = elt.getElementsByTagName("button")[0];
     var jobSpec = {
         title: getClassValue(titleClasses, elt),
@@ -32,14 +33,14 @@ function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
     if (! (matches(jobSpec.title, titleRegexps) ||
            matches(jobSpec.company, companyRegexps) ||
            matches(jobSpec.location, locationRegexps) ||
-           jobMatches(options["jobFilters"], elt))) {
+           jobMatches(jobFilters, elt))) {
         if (button)
             button.addEventListener("click", (event) => { hideJob(jobSpec); });
         return;
     }
     if (button)
         button.click();
-    if (options["hideJobs"])
+    if (hideJobs)
         elt.hidden = true;
 }
 
@@ -62,7 +63,7 @@ function jobMatches(filters, elt) {
     return filters.some(f => f["company"] == company &&
                         f["title"] == title &&
                         f["location"] == location);
-}        
+}
 
 function hideJob(jobSpec) {
     var title = jobSpec.title;
@@ -85,18 +86,14 @@ function hideJob(jobSpec) {
 }
 
 function filterAllJobs(options) {
-    var companyRegexps = compileRegexps(options["companyRegexps"]);
-    var titleRegexps = compileRegexps(options["titleRegexps"]);
-    var locationRegexps = compileRegexps(options["locationRegexps"]);
     var elts = document.querySelectorAll(
         allClasses.map(c => `.${c}`).join(", "));
     for (var elt of elts) {
         if (! (elt = findTop(elt))) return;
-        filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
-                     elt);
+        filterOneJob(elt);
     }
 }
-    
+
 function findTop(elt) {
     while (elt && elt.tagName.toLowerCase() != "li") {
         elt = elt.parentElement;
@@ -104,7 +101,18 @@ function findTop(elt) {
     return elt;
 }
 
+function loadOptions() {
+    chrome.storage.sync.get().then((options) => {
+        titleRegexps = compileRegexps(options["titleRegexps"]);
+        companyRegexps = compileRegexps(options["companyRegexps"]);
+        locationRegexps = compileRegexps(options["locationRegexps"]);
+        jobFilters = options["jobFilters"];
+        hideJobs = opens["hideJobs"];
+    });
+}
+
 function compileRegexps(regexps) {
+    if (! regexps) return [];
     var compiled = [];
     for (var regexp of regexps) {
         try {
@@ -118,7 +126,7 @@ function compileRegexps(regexps) {
     }
     return compiled;
 }
-    
+
 function filterEverything() {
     chrome.storage.sync.get().then((options) => {
         // Backward compatibility, remove eventually
@@ -143,3 +151,9 @@ function createTopObserver() {
 if (! topObserver) {
     createTopObserver();
 }
+
+loadOptions();
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace != "sync") return;
+    loadOptions();
+});

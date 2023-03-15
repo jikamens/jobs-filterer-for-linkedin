@@ -76,6 +76,7 @@ function error(msg) {
 
 function saveOptions() {
     var hide = document.getElementById("hideJobs").checked;
+    var showChanges = document.getElementById("showChanges").checked;
     var titles = getTextArea("titles");
     var companies = getTextArea("companies");
     var locations = getTextArea("locations");
@@ -93,6 +94,7 @@ function saveOptions() {
 
     chrome.storage.sync.set({
         hideJobs: hide,
+        showChanges: showChanges,
         titleRegexps: titles,
         companyRegexps: companies,
         locationRegexps: locations,
@@ -135,6 +137,11 @@ function restoreOptions() {
         if (options["jobRegexps"] && !options["titleRegexps"])
             options["titleRegexps"] = options["jobRegexps"];
         document.getElementById("hideJobs").checked = options["hideJobs"];
+        if (options["showChanges"] === undefined)
+            show = true;
+        else
+            show = options["showChanges"];
+        document.getElementById("showChanges").checked = show;
         setTextArea("titles", options["titleRegexps"]);
         setTextArea("companies", options["companyRegexps"]);
         setTextArea("locations", options["locationRegexps"]);
@@ -145,3 +152,4 @@ function restoreOptions() {
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.getElementById("save").addEventListener("click", saveOptions);
 document.getElementById("hideJobs").addEventListener("change", saveOptions);
+document.getElementById("showChanges").addEventListener("change", saveOptions);

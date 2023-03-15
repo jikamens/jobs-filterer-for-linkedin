@@ -106,6 +106,14 @@ function saveOptions() {
         setTimeout(function() {
             status.textContent = "";
         }, 1000);
+    }).catch((error) => {
+        var status = document.getElementById("status");
+        var msg = escapeHTML(error.message);
+        status.innerHTML =
+            `<font color='red'>Error saving options: ${msg}</font>`;
+        setTimeout(function() {
+            status.textContent = "";
+        }, 1000);
     });
 }
 

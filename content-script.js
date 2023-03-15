@@ -35,7 +35,7 @@ function jobMatch(className, regexps, hideJobs) {
         return;
     }
     
-    var elts = document.getElementsByClassName(className);
+    var elts = document.querySelectorAll(`.${className}`);
     for (var elt of elts) {
         var text = elt.innerText;
         for (var regexp of regexps) {
@@ -55,6 +55,8 @@ function jobMatch(className, regexps, hideJobs) {
 
 function filterEverything() {
     chrome.storage.sync.get().then((options) => {
+        jobMatch("job-card-container__primary-description",
+                 options["companyRegexps"], options["hideJobs"]);
         jobMatch("job-card-container__company-name",
                  options["companyRegexps"], options["hideJobs"]);
         jobMatch("job-card-list__title",

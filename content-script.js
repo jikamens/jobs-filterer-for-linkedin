@@ -72,7 +72,7 @@ function handleButtonClick(event) {
     }
     chrome.storage.sync.get().then((options) => {
         if (! options["jobFilters"]) options["jobFilters"] = [];
-        options["jobFilters"].push({
+        options["jobFilters"].unshift({
             title: title,
             company: company,
             location: location

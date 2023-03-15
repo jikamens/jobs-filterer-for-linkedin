@@ -39,13 +39,39 @@ function checkRegExps(regexps) {
             var compiled = new RegExp(regexp);
         }
         catch (ex) {
-            quoted = escapeHTML(ex.message);
-            document.getElementById("status").innerHTML =
-                `<font color="red">${quoted}</font>`;
+            error(ex.message);
             return false;
         }
     }
     return true;
+}
+
+function parseJobFilters(specStrings) {
+    var specArrays = specStrings.map(s=>s.split(/\s*\/\/\s*/))
+    var specs = [];
+    for (var specString of specStrings) {
+        let specArray = specArrays.shift();
+        if (specArray.length < 3) {
+            error(`Too few fields in "${specString}"`);
+            return false;
+        }
+        if (specArray.length > 3) {
+            error(`Too many fields in "${specString}"`);
+            return false;
+        }
+        specs.push({
+            title: specArray[0],
+            company: specArray[1],
+            location: specArray[2]
+        });
+    }
+    return specs;
+}
+
+function error(msg) {
+    quoted = escapeHTML(msg);
+    document.getElementById("status").innerHTML =
+        `<font color="red">${quoted}</font>`;
 }
 
 function saveOptions() {
@@ -53,6 +79,7 @@ function saveOptions() {
     var titles = getTextArea("titles");
     var companies = getTextArea("companies");
     var locations = getTextArea("locations");
+    var jobs = getTextArea("jobs");
 
     if (! (checkRegExps(titles) &&
            checkRegExps(companies) &&
@@ -60,11 +87,16 @@ function saveOptions() {
         return;
     }
 
+    var jobFilters = parseJobFilters(jobs);
+    if (jobFilters === false)
+        return;
+
     chrome.storage.sync.set({
         hideJobs: hide,
-        jobRegexps: titles,
+        titleRegexps: titles,
         companyRegexps: companies,
-        locationRegexps: locations
+        locationRegexps: locations,
+        jobFilters: jobFilters
     }).then(() => {
         // Update status to let user know options were saved.
         var status = document.getElementById("status");
@@ -84,12 +116,29 @@ function setTextArea(id, regexps) {
     elt.value = regexps.join("\n") + "\n";
 }
 
+function populateJobsArea(filters) {
+    if (! filters) return;
+    filters = filters.map(f => `${f.title} // ${f.company} // ${f.location}`)
+    document.getElementById("jobs").value = filters.join("\n") + "\n";
+}
+
+function optionsChanged(changes, namespace) {
+    if (namespace != "sync") return;
+    if (changes.jobFilters?.newValue === undefined) return;
+    populateJobsArea(changes.jobFilters.newValue)
+}
+
 function restoreOptions() {
+    chrome.storage.onChanged.addListener(optionsChanged);
     chrome.storage.sync.get().then((options) => {
+        // Backward compatibility, remove eventually
+        if (options["jobRegexps"] && !options["titleRegexps"])
+            options["titleRegexps"] = options["jobRegexps"];
         document.getElementById("hideJobs").checked = options["hideJobs"];
-        setTextArea("titles", options["jobRegexps"]);
+        setTextArea("titles", options["titleRegexps"]);
         setTextArea("companies", options["companyRegexps"]);
         setTextArea("locations", options["locationRegexps"]);
+        populateJobsArea(options["jobFilters"]);
     });
 }
 

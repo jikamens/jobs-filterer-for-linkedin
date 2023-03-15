@@ -14,81 +14,123 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-function filterJob(elt, hideJob) {
-    while (elt.tagName.toLowerCase() != "li") {
+const companyClasses = ["job-card-container__primary-description",
+                        "job-card-container__company-name"];
+const titleClasses = ["job-card-list__title"];
+const locationClasses = ["job-card-container__metadata-item"];
+const allClasses = companyClasses.concat(titleClasses, locationClasses);
+
+function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
+                     elt) {
+    var button = elt.getElementsByTagName("button")[0];
+    if (! (classMatches(companyClasses, companyRegexps, elt) ||
+           classMatches(titleClasses, titleRegexps, elt) ||
+           classMatches(locationClasses, locationRegexps, elt) ||
+           jobMatches(options["jobFilters"], elt))) {
+        if (button)
+            button.addEventListener("click", handleButtonClick);
+        return;
+    }
+    if (options["hideJobs"])
+        elt.hidden = true;
+    if (button)
+        button.click();
+}
+
+function classMatches(classes, regexps, elt) {
+    var fieldValue;
+    if (! (fieldValue = getClassValue(classes, elt))) return false;
+    return regexps.some(r => r.test(fieldValue));
+}
+
+function getClassValue(classes, elt) {
+    var selector = classes.map(c => `.${c}`).join(", ");
+    var elts = elt.querySelectorAll(selector);
+    if (elts.length == 0) return false;
+    return elts[0].innerText;
+}
+
+function jobMatches(filters, elt) {
+    var company = getClassValue(companyClasses, elt);
+    var title = getClassValue(titleClasses, elt);
+    var location = getClassValue(locationClasses, elt);
+    return filters.some(f => f["company"] == company &&
+                        f["title"] == title &&
+                        f["location"] == location);
+}        
+
+function handleButtonClick(event) {
+    var elt = findTop(event.currentTarget);
+    if (! elt) return;
+    var company = getClassValue(companyClasses, elt);
+    var title = getClassValue(titleClasses, elt);
+    var location = getClassValue(locationClasses, elt);
+    if (! (company && title && location)) {
+        console.log("Missing value for", elt, "company=", company,
+                    "title=", title, "location=", location);
+        return;
+    }
+    chrome.storage.sync.get().then((options) => {
+        if (! options["jobFilters"]) options["jobFilters"] = [];
+        options["jobFilters"].push({
+            title: title,
+            company: company,
+            location: location
+        });
+        chrome.storage.sync.set(options).then();
+    });
+}
+
+function filterAllJobs(options) {
+    var companyRegexps = compileRegexps(options["companyRegexps"]);
+    var titleRegexps = compileRegexps(options["titleRegexps"]);
+    var locationRegexps = compileRegexps(options["locationRegexps"]);
+    var elts = document.querySelectorAll(
+        allClasses.map(c => `.${c}`).join(", "));
+    for (var elt of elts) {
+        if (! (elt = findTop(elt))) return;
+        filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
+                     elt);
+    }
+}
+    
+function findTop(elt) {
+    while (elt && elt.tagName.toLowerCase() != "li") {
         elt = elt.parentElement;
     }
-    if (! elt) {
-        return;
-    }
-    if (hideJob) {
-        elt.hidden = true;
-    }
-    var button = elt.getElementsByTagName("button")[0];
-    if (button) {
-        button.click();
-    }
+    return elt;
 }
 
-function jobMatch(className, regexps, hideJobs) {
-    if (! regexps || ! regexps.length) {
-        return;
-    }
-    
-    var elts = document.querySelectorAll(`.${className}`);
-    for (var elt of elts) {
-        var text = elt.innerText;
-        for (var regexp of regexps) {
-            try {
-                var compiled = new RegExp(regexp);
-            }
-            catch (ex) {
-                console.log(ex.message);
-                continue;
-            }
-            if (compiled.test(text)) {
-                filterJob(elt.parentElement, hideJobs);
-            }
+function compileRegexps(regexps) {
+    var compiled = [];
+    for (var regexp of regexps) {
+        try {
+            regexp = new RegExp(regexp);
         }
+        catch (ex) {
+            console.log(ex.message);
+            continue;
+        }
+        compiled.push(regexp);
     }
+    return compiled;
 }
-
+    
 function filterEverything() {
     chrome.storage.sync.get().then((options) => {
-        jobMatch("job-card-container__primary-description",
-                 options["companyRegexps"], options["hideJobs"]);
-        jobMatch("job-card-container__company-name",
-                 options["companyRegexps"], options["hideJobs"]);
-        jobMatch("job-card-list__title",
-                 options["jobRegexps"], options["hideJobs"]);
-        jobMatch("job-card-container__metadata-item",
-                 options["locationRegexps"], options["hideJobs"]);
+        // Backward compatibility, remove eventually
+        if (options["jobRegexps"] && !options["titleRegexps"])
+            options["titleRegexps"] = options["jobRegexps"];
+        options["jobFilters"] ||= [];
+        filterAllJobs(options);
     });
 }
 
 var topObserver = null;
-var jobsObserver = null;
-
-function createJobsObserver() {
-    var targetNode = document.getElementsByClassName(
-        "scaffold-layout__list")[0];
-    if (! targetNode) {
-        return;
-    }
-    var config = {childList: true, subtree: true};
-    var callback = (mutationList, observer) => {
-        filterEverything();
-    };
-    jobsObserver = new MutationObserver(callback);
-    jobsObserver.observe(targetNode, config);
-    topObserver.disconnect();
-    filterEverything();
-}
 
 function createTopObserver() {
     var config = {childList: true, subtree: true};
     var callback = (mutationList, observer) => {
-        // createJobsObserver();
         filterEverything();
     };
     topObserver = new MutationObserver(callback);

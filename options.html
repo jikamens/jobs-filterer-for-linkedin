@@ -22,14 +22,33 @@ this program. If not, see <https://www.gnu.org/licenses/>.
     <p><input type="checkbox" id="hideJobs">Hide filtered jobs
       completely</p>
 
-    <p>Regular expressions (one per line) to filter JOB TITLES:</p>
-    <textarea id="titles" rows="10" cols="50"></textarea>
-
-    <p>Regular expressions to filter COMPANY NAMES:</p>
-    <textarea id="companies" rows="10" cols="50"></textarea>
-
-    <p>Regular expressions to filter LOCATIONS:</p>
-    <textarea id="locations" rows="10" cols="50"></textarea>
+    <table>
+      <tr>
+        <td>
+          <p>Regular expressions (one per line) to filter JOB
+            TITLES:</p>
+          <textarea id="titles" rows="10" cols="40"></textarea>
+        </td>
+        <td>
+          <p>Regular expressions to filter COMPANY NAMES:</p>
+          <textarea id="companies" rows="10" cols="40"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p>Regular expressions to filter LOCATIONS:</p>
+          <textarea id="locations" rows="10" cols="40"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          <p>Specific jobs to filter, specified as
+            &ldquo;<em>title</em> // <em>company</em>
+            // <em>location</em>&rdquo;:</p>
+          <textarea id="jobs" rows="10" cols="100"></textarea>
+        </td>
+      </tr>
+    </table>
     
     <p><span id="status"></span></p>
     <p><button id="save">Save</button></p>
@@ -48,15 +67,31 @@ this program. If not, see <https://www.gnu.org/licenses/>.
       to show you a particular job again, it frequently ignores
       this.</p>
 
-    <p>This extension&rsquo;s purpose is to allow you to improve the quality
-      of these lists of jobs by filtering out jobs you don&rsquo;t want to
-      see based on regular-expression matches on the job title,
+    <p>This extension&rsquo;s purpose is to allow you to improve the
+      quality of these lists of jobs by filtering out jobs you
+      don&rsquo;t want to see based on either jobs whose
+      &ldquo;don&rsquo;t show me this&rdquo; button you&rsquo;ve
+      clicked or on regular-expression matches on the job title,
       company name, or location.</p>
 
-    <p>To use it, enter the regular expressions you want to filter
-      with, one per line, in the text boxes above, then click
-      Save. <em>Do not enclose your regular expressions in slashes</em>
-      like you would if you were writing them in JavaScript.</p>
+    <p>The simplest way to use this extension is to tell LinkedIn not
+      to show you jobs by clicking on their buttons intended for that
+      purpose. LinkedIn won&rsquo;t necessarily obey that, but this
+      extension will: it&rsquo;ll add the job&rsquo;s title, company
+      name, and location to the &ldquo;Specific jobs&rdquo; list
+      above, and it&rsquo;ll be filtered out automatically from then
+      on. You may want to revisit this options page periodically and
+      clear out old jobs from the list so that it doesn&rsquo;t get too
+      long and slow things down. If you make a mistake and filter out
+      a job you actually want to keep seeing, you can remove it from
+      the list above and click the Save button to undo it.</p>
+    
+    <p>In addition to filtering out specific jobs by clicking the
+      button, you can filter jobs by regular expression math. To do
+      that, enter the regular expressions you want to filter with, one
+      per line, in the text boxes above, then click Save. <em>Do not
+      enclose your regular expressions in slashes</em> like you would
+      if you were writing them in JavaScript.</p>
 
     <p>Documenting how to write regular expressions is beyond the
       scope of this help
@@ -78,8 +113,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
     <h2>Example workflow</h2>
 
-    <p>If you're actively job-searching, you may wish to bookmark this
-      options page so you can reopen it easily.</p>
+    <p>If you&rsquo;re actively job-searching, you may wish to
+      bookmark this options page so you can reopen it easily.</p>
 
     <p>A common workflow for this extension is to keep this options
       page open in one browser Window while you have LinkedIn open in
@@ -94,9 +129,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
     <h2>Credits</h2>
 
     <p>This extension was written by Jonathan Kamens. If you find this
-      extension useful, you can buy me a coffee
-      <a href="https://blog.kamens.us/support-my-blog"
-      target="_blank">here</a>.</p>
+      extension useful, you
+      can <a href="https://patreon.com/jikseclecticofferings">support
+      me on Patreon</a> or buy me a coffee
+      via <a href="https://paypal.me/JonathanKamens">PayPal</a>
+      or <a href="https://venmo.com/Jonathan-Kamens">Venmo</a>.</p>
 
     <p>The source code for this extension lives
       <a href="https://github.com/jikamens/linkedin-job-filterer"

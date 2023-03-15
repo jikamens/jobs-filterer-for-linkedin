@@ -74,6 +74,13 @@ function hideJob(jobSpec) {
                     "title=", title, "location=", location);
         return;
     }
+    if (matches(title, titleRegexps) ||
+        matches(company, companyRegexps) ||
+        matches(location, locationRegexps))
+        // Don't list a job explicitly if it's already filtered by the
+        // regular expressions, presumably because the user just edited them
+        // to include it.
+        return;
     chrome.storage.sync.get().then((options) => {
         if (! options["jobFilters"]) options["jobFilters"] = [];
         options["jobFilters"].unshift({

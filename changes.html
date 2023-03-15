@@ -33,6 +33,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
           instead of the bottom, i.e., the list is now newest jobs
           first, so if you have the options page opened when you hide
           a job you'll see it show up at the top of the list.</li>
+        <li>When the user hides a job, check whether it would already
+          be filtered out by the currently configured regular
+          expressions (presumably because the user just edited them to
+          exclude it), and if so, don't add it to the list of
+          explicitly filtered jobs.</li>
         <li>Move the extension help to a separate page.</li>
         <li>Make changes to the "Hide filtered jobs completely"
           checkbox save immediately instead of waiting for the user to

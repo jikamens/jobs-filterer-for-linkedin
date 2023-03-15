@@ -23,12 +23,18 @@ const allClasses = companyClasses.concat(titleClasses, locationClasses);
 function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
                      elt) {
     var button = elt.getElementsByTagName("button")[0];
-    if (! (classMatches(companyClasses, companyRegexps, elt) ||
-           classMatches(titleClasses, titleRegexps, elt) ||
-           classMatches(locationClasses, locationRegexps, elt) ||
+    var jobSpec = {
+        title: getClassValue(titleClasses, elt),
+        company: getClassValue(companyClasses, elt),
+        location: getClassValue(locationClasses, elt)
+    };
+    let random = Math.random();
+    if (! (matches(jobSpec.title, titleRegexps) ||
+           matches(jobSpec.company, companyRegexps) ||
+           matches(jobSpec.location, locationRegexps) ||
            jobMatches(options["jobFilters"], elt))) {
         if (button)
-            button.addEventListener("click", handleButtonClick);
+            button.addEventListener("click", (event) => { hideJob(jobSpec); });
         return;
     }
     if (button)
@@ -37,9 +43,8 @@ function filterOneJob(options, companyRegexps, titleRegexps, locationRegexps,
         elt.hidden = true;
 }
 
-function classMatches(classes, regexps, elt) {
-    var fieldValue;
-    if (! (fieldValue = getClassValue(classes, elt))) return false;
+function matches(fieldValue, regexps) {
+    if (! fieldValue) return false;
     return regexps.some(r => r.test(fieldValue));
 }
 
@@ -59,14 +64,12 @@ function jobMatches(filters, elt) {
                         f["location"] == location);
 }        
 
-function handleButtonClick(event) {
-    var elt = findTop(event.currentTarget);
-    if (! elt) return;
-    var company = getClassValue(companyClasses, elt);
-    var title = getClassValue(titleClasses, elt);
-    var location = getClassValue(locationClasses, elt);
+function hideJob(jobSpec) {
+    var title = jobSpec.title;
+    var company = jobSpec.company;
+    var location = jobSpec.location;
     if (! (company && title && location)) {
-        console.log("Missing value for", elt, "company=", company,
+        console.log("Missing value, company=", company,
                     "title=", title, "location=", location);
         return;
     }

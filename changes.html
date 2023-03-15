@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+Copyright 2023 Jonathan Kamens.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<html>
+  <head><title>LinkedIn Jobs Filterer Changelog</title></head>
+  <body>
+    <p>(See extension documentation <a href="help.html">here</a>.
+      Please support continued development of this
+      extension <a href="help.html#support">here</a>.)</p>
+    <div style="font-size: 150%;">
+      <h2>LinkedIn Jobs Filterer change history</h2>
+      <h3>Version 0.4</h3>
+      <ul>
+        <li>Fix automatic job filtering on click so that it works on
+          the job search page; previously it only worked on the
+          recommended jobs page.</li>
+        <li>Add automatically filtered jobs to the list at the top
+          instead of the bottom, i.e., the list is now newest jobs
+          first, so if you have the options page opened when you hide
+          a job you'll see it show up at the top of the list.</li>
+        <li>Move the extension help to a separate page.</li>
+        <li>Add this changelog page and make it open on install/update.</li>
+      </ul>
+      <h3>Version 0.3</h3>
+      <ul>
+        <li><strong>Filter jobs automatically when the user clicks the
+          hide button.</strong> You no longer have to edit regular
+          expressions in the extension options to hide jobs. Now when
+          you click the button to tell LinkedIn not to show you a job
+          anymore (the eye with the slash through it), the extension
+          remembers that automatically, and it subsequently hides the
+          job reliably even if LinkedIn doesn't.</li>
+        <li>Update the extension to accommodate changes in the format
+          of LinkedIn's website code.</li>
+      </ul>
+      <h3>Version 0.2</h3>
+      <ul>
+        <li>Add an example workflow to the documentation on the
+          options page.</li>
+      </ul>
+      <h3>Version 0.1</h3>
+      <ul>
+        <li>Initial release</li>
+      </ul>
+    </div>
+  </body>
+</html>

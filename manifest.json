@@ -11,6 +11,12 @@
             "js": ["content-script.js"]
         }
     ],
+    "web_accessible_resources": [
+        {
+            "matches": ["https://www.linkedin.com/*"],
+            "resources": ["utils.js"]
+        }
+    ],
     "background": {
         "service_worker": "background.js"
     },

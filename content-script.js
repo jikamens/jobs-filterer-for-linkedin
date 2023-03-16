@@ -14,6 +14,13 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+var utils;
+
+(async () => {
+    const src = chrome.runtime.getURL("utils.js");
+    utils = await import(src);
+})();
+
 const companyClasses = ["job-card-container__primary-description",
                         "job-card-container__company-name"];
 const titleClasses = ["job-card-list__title"];
@@ -75,7 +82,17 @@ function jobMatches(filters, elt) {
                         f["location"] == location);
 }
 
+var lastJob;
+var lastJobTime = 0;
+
 function hideJob(jobSpec) {
+    // For some reason this event handler is being called many times for each
+    // click. We need to process it only once or we flood the chrome.storage API
+    // with requests and it starts blocking them.
+    if (utils.valuesAreEqual(lastJob, jobSpec) &&
+        (new Date).getTime() - lastJobTime < 1000) return;
+    lastJob = jobSpec;
+    lastJobTime = (new Date).getTime();
     var title = jobSpec.title;
     var company = jobSpec.company;
     var location = jobSpec.location;

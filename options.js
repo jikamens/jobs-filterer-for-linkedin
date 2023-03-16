@@ -14,6 +14,13 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+var utils;
+
+(async () => {
+    const src = chrome.runtime.getURL("utils.js");
+    utils = await import(src);
+})();
+
 function getTextArea(id) {
     var elt = document.getElementById(id);
     var items = elt.value.split("\n");
@@ -108,30 +115,11 @@ function saveOptions() {
     });
 }
 
-function valuesAreEqual(value1, value2) {
-    if (Array.isArray(value1)) {
-        if (!Array.isArray(value2)) return false;
-        if (value1.length != value2.length) return false;
-        for (var i = 0; i < value1.length; i++)
-            if (! valuesAreEqual(value1[i], value2[i])) return false;
-        return true;
-    }
-    if (typeof(value1) == "object") {
-        if (typeof(value2) != "object") return false;
-        if (Object.keys(value1).length != Object.keys(value2).length)
-            return false;
-        for (var [key, value] of Object.entries(value1))
-            if (! valuesAreEqual(value, value2[key])) return false;
-        return true;
-    }
-    return value1 == value2;
-}
-
 function saveChanges(oldOptions, newOptions) {
     var changes = {};
     var changed = false;
     for (var [key, value] of Object.entries(newOptions)) {
-        if (! valuesAreEqual(value, oldOptions[key])) {
+        if (! utils.valuesAreEqual(value, oldOptions[key])) {
             changes[key] = value;
             changed = true;
             console.log(`Saving ${key}=${value}`);

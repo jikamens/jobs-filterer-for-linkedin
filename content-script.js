@@ -114,7 +114,7 @@ function loadOptions() {
         companyRegexps = compileRegexps(options["companyRegexps"]);
         locationRegexps = compileRegexps(options["locationRegexps"]);
         jobFilters = options["jobFilters"];
-        hideJobs = opens["hideJobs"];
+        hideJobs = options["hideJobs"];
     });
 }
 

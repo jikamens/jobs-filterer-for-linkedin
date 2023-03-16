@@ -43,7 +43,7 @@ function escapeHTML(unsafeText) {
 function checkRegExps(regexps) {
     for (var regexp of regexps) {
         try {
-            var compiled = new RegExp(regexp);
+            new RegExp(regexp);
         }
         catch (ex) {
             error(ex.message);
@@ -76,7 +76,7 @@ function parseJobFilters(specStrings) {
 }
 
 function error(msg) {
-    quoted = escapeHTML(msg);
+    var quoted = escapeHTML(msg);
     document.getElementById("status").innerHTML =
         `<font color="red">${quoted}</font>`;
 }
@@ -101,7 +101,7 @@ function saveOptions() {
 
     // Only store what has changed, or we will too frequently run into the max
     // write per minute limit.
-    newOptions = {
+    var newOptions = {
         hideJobs: hide,
         showChanges: showChanges,
         titleRegexps: titles,
@@ -179,6 +179,7 @@ function restoreOptions() {
         if (options["jobRegexps"] && !options["titleRegexps"])
             options["titleRegexps"] = options["jobRegexps"];
         document.getElementById("hideJobs").checked = options["hideJobs"];
+        var show;
         if (options["showChanges"] === undefined)
             show = true;
         else

@@ -24,6 +24,7 @@ function restoreOptions() {
     document.getElementById("showChanges").addEventListener(
         "change", saveOptions);
     chrome.storage.sync.get(["showChanges"]).then((options) => {
+        var show;
         if (options["showChanges"] === undefined)
             show = true;
         else

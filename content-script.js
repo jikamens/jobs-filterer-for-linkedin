@@ -21,17 +21,18 @@ var utils;
     utils = await import(src);
 })();
 
+const cardClasses = ["jobs-search-results__list-item",
+                     "jobs-job-board-list__item"];
 const companyClasses = ["job-card-container__primary-description",
                         "job-card-container__company-name"];
 const titleClasses = ["job-card-list__title"];
 const locationClasses = ["job-card-container__metadata-item"];
-const allClasses = companyClasses.concat(titleClasses, locationClasses);
 
 var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs;
 
 function findDismissButton(elt) {
     var elts = elt.getElementsByTagName("button");
-    for (var elt of elts) {
+    for (elt of elts) {
         var label = elt.getAttribute("aria-label");
         if (label && (label.includes("Hide") || label.includes("Dismiss")))
             return elt;
@@ -39,27 +40,62 @@ function findDismissButton(elt) {
     return null;
 }
 
-function filterOneJob(elt) {
-    var button = findDismissButton(elt);
-    var jobSpec = {
+function findUnhideButton(elt) {
+    var elts = elt.getElementsByTagName("button");
+    for (elt of elts)
+        if (elt.innerText == "Undo")
+            return elt;
+    return null;
+}
+
+function getJobSpec(elt) {
+    var spec = {
         title: getClassValue(titleClasses, elt),
         company: getClassValue(companyClasses, elt),
         location: getClassValue(locationClasses, elt)
     };
-    if (! (matches(jobSpec.title, titleRegexps) ||
-           matches(jobSpec.company, companyRegexps) ||
-           matches(jobSpec.location, locationRegexps) ||
-           jobMatches(jobFilters, elt))) {
-        if (button)
-            button.addEventListener("click", (event) => {
-                hideJob(jobSpec, elt);
-            });
-        return;
+    if (! (spec.title && spec.company && spec.location))
+        return null;
+    return spec;
+}
+
+function filterOneJob(elt) {
+    var hideButton = findDismissButton(elt);
+    if (hideButton && ! elt.jobsFiltererFiltered) {
+        elt.jobsFiltererFiltered = true;
+        var jobSpec = getJobSpec(elt);
+        if (! jobSpec) return;
+        console.log("filterOneJob", JSON.stringify(jobSpec));
+        if ((matches(jobSpec.title, titleRegexps) ||
+             matches(jobSpec.company, companyRegexps) ||
+             matches(jobSpec.location, locationRegexps) ||
+             jobMatches(jobSpec))) {
+            hideButton.click();
+            if (hideJobs)
+                elt.hidden = true;
+            return;
+        }
+        var hideListener;
+        hideListener = (event) => {
+            event.currentTarget.removeEventListener("click", hideListener);
+            hideJob(jobSpec, elt);
+        };
+        hideButton.addEventListener("click", hideListener);
+        console.log("Wired hide button");
     }
-    if (button)
-        button.click();
-    if (hideJobs)
-        elt.hidden = true;
+    var unhideButton = findUnhideButton(elt);
+    if (unhideButton && ! elt.jobsFiltererUnfiltered) {
+        elt.jobsFiltererUnfiltered = true;
+        var unhideListener;
+        unhideListener = (event) => {
+            event.currentTarget.removeEventListener("click", unhideListener);
+            // There is a delay here to give LinkedIn time to repopulate the
+            // job data so that we can find it when trying to unhide the job.
+            setInterval(() => { unhideJob(elt); }, 2000);
+        };
+        unhideButton.addEventListener("click", unhideListener);
+        console.log("Wired unhide button");
+    }
 }
 
 function matches(fieldValue, regexps) {
@@ -74,70 +110,51 @@ function getClassValue(classes, elt) {
     return elts[0].innerText;
 }
 
-function jobMatches(filters, elt) {
-    var company = getClassValue(companyClasses, elt);
-    var title = getClassValue(titleClasses, elt);
-    var location = getClassValue(locationClasses, elt);
-    return filters.some(f => f["company"] == company &&
-                        f["title"] == title &&
-                        f["location"] == location);
+function jobMatches(jobSpec) {
+    return jobFilters.some(f => utils.valuesAreEqual(f, jobSpec));
 }
 
-var lastJob;
-var lastJobTime = 0;
-
-function hideJob(jobSpec, elt) {
-    // For some reason this event handler is being called many times for each
-    // click. We need to process it only once or we flood the chrome.storage API
-    // with requests and it starts blocking them.
-    if (utils.valuesAreEqual(lastJob, jobSpec) &&
-        (new Date).getTime() - lastJobTime < 1000) return;
-    lastJob = jobSpec;
-    lastJobTime = (new Date).getTime();
+function hideJob(jobSpec) {
     var title = jobSpec.title;
     var company = jobSpec.company;
     var location = jobSpec.location;
-    if (! (company && title && location)) {
-        console.log("Missing value, company=", company,
-                    "title=", title, "location=", location);
-        return;
-    }
     // Don't list a job explicitly if it's already filtered by the regular
     // expressions, presumably because the user just edited them to include it,
     // or if it's already listed. This could happen if user hides a job and then
     // unhides it and then we detect the DOM change and scan the job again,
     // generating an artificial click event which causes this function to be
-    // called.
+    // called. (This shouldn't happen anymore with recent code improvements but
+    // I'm leaving this in as a precautionary measure.)
     if (matches(title, titleRegexps) ||
         matches(company, companyRegexps) ||
         matches(location, locationRegexps) ||
-        jobMatches(jobFilters, elt))
+        jobMatches(jobSpec))
         return;
-    chrome.storage.sync.get().then((options) => {
-        if (! options["jobFilters"]) options["jobFilters"] = [];
-        options["jobFilters"].unshift({
-            title: title,
-            company: company,
-            location: location
-        });
-        chrome.storage.sync.set(options).then();
-    });
+    jobFilters.unshift(jobSpec);
+    chrome.storage.sync.set({jobFilters: jobFilters}).then();
 }
 
-function filterAllJobs(options) {
+function unhideJob(elt) {
+    // Find the job details, check if they're in jobFilters, and remove them
+    // if so.
+    var jobSpec = getJobSpec(elt);
+    if (! jobSpec) return;
+    var changed = false;
+    for (var i = jobFilters.length - 1; i >= 0; i--)
+        if (utils.valuesAreEqual(jobFilters[i], jobSpec)) {
+            changed = true;
+            jobFilters.splice(i, 1);
+        }
+    if (changed)
+        chrome.storage.sync.set({jobFilters: jobFilters}).then();
+}
+
+function filterAllJobs() {
     var elts = document.querySelectorAll(
-        allClasses.map(c => `.${c}`).join(", "));
+        cardClasses.map(c => `.${c}`).join(", "));
     for (var elt of elts) {
-        if (! (elt = findTop(elt))) return;
         filterOneJob(elt);
     }
-}
-
-function findTop(elt) {
-    while (elt && elt.tagName.toLowerCase() != "li") {
-        elt = elt.parentElement;
-    }
-    return elt;
 }
 
 function loadOptions() {
@@ -145,7 +162,7 @@ function loadOptions() {
         titleRegexps = compileRegexps(options["titleRegexps"]);
         companyRegexps = compileRegexps(options["companyRegexps"]);
         locationRegexps = compileRegexps(options["locationRegexps"]);
-        jobFilters = options["jobFilters"];
+        jobFilters = options["jobFilters"] || [];
         hideJobs = options["hideJobs"];
     });
 }
@@ -172,7 +189,7 @@ function filterEverything() {
         if (options["jobRegexps"] && !options["titleRegexps"])
             options["titleRegexps"] = options["jobRegexps"];
         options["jobFilters"] ||= [];
-        filterAllJobs(options);
+        filterAllJobs();
     });
 }
 
@@ -180,6 +197,7 @@ var topObserver = null;
 
 function createTopObserver() {
     var config = {childList: true, subtree: true};
+    // eslint-disable-next-line no-unused-vars
     var callback = (mutationList, observer) => {
         filterEverything();
     };

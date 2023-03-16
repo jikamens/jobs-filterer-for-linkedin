@@ -7,8 +7,9 @@ NAME=LinkedInJobsFilterer
 # their directories.
 #
 #PRIVATE_KEY=key.pem
-FILES=content-script.js manifest.json options.html options.js \
+FILES=$(wildcard *.js) $(wildcard *.html) manifest.json options.html \
 	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
+ESLINT=node_modules/.bin/eslint
 
 all: $(NAME).zip
 
@@ -26,6 +27,12 @@ build/manifest.json: manifest.json
 build/%: %
 	@mkdir -p $(dir $@)
 	cp $< $@
+
+lint: $(ESLINT)
+	$(ESLINT) .
+
+$(ESLINT):
+	npm install
 
 clean:
 	rm -rf $(NAME).zip build

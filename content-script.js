@@ -22,8 +22,18 @@ const allClasses = companyClasses.concat(titleClasses, locationClasses);
 
 var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs;
 
+function findDismissButton(elt) {
+    var elts = elt.getElementsByTagName("button");
+    for (var elt of elts) {
+        var label = elt.getAttribute("aria-label");
+        if (label && (label.includes("Hide") || label.includes("Dismiss")))
+            return elt;
+    }
+    return null;
+}
+
 function filterOneJob(elt) {
-    var button = elt.getElementsByTagName("button")[0];
+    var button = findDismissButton(elt);
     var jobSpec = {
         title: getClassValue(titleClasses, elt),
         company: getClassValue(companyClasses, elt),

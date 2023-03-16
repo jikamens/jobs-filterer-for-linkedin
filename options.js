@@ -92,14 +92,60 @@ function saveOptions() {
     if (jobFilters === false)
         return;
 
-    chrome.storage.sync.set({
+    // Only store what has changed, or we will too frequently run into the max
+    // write per minute limit.
+    newOptions = {
         hideJobs: hide,
         showChanges: showChanges,
         titleRegexps: titles,
         companyRegexps: companies,
         locationRegexps: locations,
         jobFilters: jobFilters
-    }).then(() => {
+    };
+
+    chrome.storage.sync.get().then((oldOptions) => {
+        saveChanges(oldOptions, newOptions);
+    });
+}
+
+function valuesAreEqual(value1, value2) {
+    if (Array.isArray(value1)) {
+        if (!Array.isArray(value2)) return false;
+        if (value1.length != value2.length) return false;
+        for (var i = 0; i < value1.length; i++)
+            if (! valuesAreEqual(value1[i], value2[i])) return false;
+        return true;
+    }
+    if (typeof(value1) == "object") {
+        if (typeof(value2) != "object") return false;
+        if (Object.keys(value1).length != Object.keys(value2).length)
+            return false;
+        for (var [key, value] of Object.entries(value1))
+            if (! valuesAreEqual(value, value2[key])) return false;
+        return true;
+    }
+    return value1 == value2;
+}
+
+function saveChanges(oldOptions, newOptions) {
+    var changes = {};
+    var changed = false;
+    for (var [key, value] of Object.entries(newOptions)) {
+        if (! valuesAreEqual(value, oldOptions[key])) {
+            changes[key] = value;
+            changed = true;
+            console.log(`Saving ${key}=${value}`);
+        }
+    }
+    if (! changed) {
+        var status = document.getElementById("status");
+        status.innerHTML = "<font color='green'>No changes.</font>";
+        setTimeout(function() {
+            status.textContent = "";
+        }, 1000);
+        return;
+    }
+    chrome.storage.sync.set(changes).then(() => {
         // Update status to let user know options were saved.
         var status = document.getElementById("status");
         status.innerHTML = "<font color='green'>Options saved.</font>";

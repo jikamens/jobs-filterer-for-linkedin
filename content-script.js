@@ -52,7 +52,9 @@ function filterOneJob(elt) {
            matches(jobSpec.location, locationRegexps) ||
            jobMatches(jobFilters, elt))) {
         if (button)
-            button.addEventListener("click", (event) => { hideJob(jobSpec); });
+            button.addEventListener("click", (event) => {
+                hideJob(jobSpec, elt);
+            });
         return;
     }
     if (button)
@@ -85,7 +87,7 @@ function jobMatches(filters, elt) {
 var lastJob;
 var lastJobTime = 0;
 
-function hideJob(jobSpec) {
+function hideJob(jobSpec, elt) {
     // For some reason this event handler is being called many times for each
     // click. We need to process it only once or we flood the chrome.storage API
     // with requests and it starts blocking them.
@@ -101,12 +103,16 @@ function hideJob(jobSpec) {
                     "title=", title, "location=", location);
         return;
     }
+    // Don't list a job explicitly if it's already filtered by the regular
+    // expressions, presumably because the user just edited them to include it,
+    // or if it's already listed. This could happen if user hides a job and then
+    // unhides it and then we detect the DOM change and scan the job again,
+    // generating an artificial click event which causes this function to be
+    // called.
     if (matches(title, titleRegexps) ||
         matches(company, companyRegexps) ||
-        matches(location, locationRegexps))
-        // Don't list a job explicitly if it's already filtered by the
-        // regular expressions, presumably because the user just edited them
-        // to include it.
+        matches(location, locationRegexps) ||
+        jobMatches(jobFilters, elt))
         return;
     chrome.storage.sync.get().then((options) => {
         if (! options["jobFilters"]) options["jobFilters"] = [];

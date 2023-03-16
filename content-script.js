@@ -46,7 +46,6 @@ function filterOneJob(elt) {
         company: getClassValue(companyClasses, elt),
         location: getClassValue(locationClasses, elt)
     };
-    let random = Math.random();
     if (! (matches(jobSpec.title, titleRegexps) ||
            matches(jobSpec.company, companyRegexps) ||
            matches(jobSpec.location, locationRegexps) ||

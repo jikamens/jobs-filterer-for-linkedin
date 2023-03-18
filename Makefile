@@ -30,6 +30,10 @@ build/%: %
 
 lint: $(ESLINT)
 	$(ESLINT) .
+	flake8 run-tests.py
+
+test: test-config.yml $(NAME).zip
+	./run-tests.py
 
 $(ESLINT):
 	npm install

@@ -26,26 +26,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
       <h2>LinkedIn Jobs Filterer change history</h2>
       <h3>Version 0.5</h3>
       <ul>
+        <li>Add this changelog page and make it open on install/update.</li>
         <li>New feature: if you "Undo" a job hide, and that job is
           listed in the extension options as having been explicitly
           hidden by you, then it now gets removed from that list
           automatically.</li>
-        <li>Fix the missing help page.</li>
-        <li>Fix a bug which was preventing this changelog from being
-          displayed on install/update as it is supposed to be.</li>
-        <li>Fix a bug which occasionally caused auto-filtered jobs to
-          fail to be saved and attempts to save options to fail with
-          the error, "This request exceeds the
-          MAX_WRITE_OPERATIONS_PER_MINUTE quota."</li>
-      </ul>
-      <h3>Version 0.4</h3>
-      <ul>
-        <li>Fix automatic job filtering on click so that it works on
-          the job search page; previously it only worked on the
-          recommended jobs page.</li>
-        <li>Fix bug which could cause the extension to save a job
-          matching a user's filters from a company's page while trying
-          to hide it.</li>
         <li>Add automatically filtered jobs to the list at the top
           instead of the bottom, i.e., the list is now newest jobs
           first, so if you have the options page opened when you hide
@@ -55,13 +40,25 @@ this program. If not, see <https://www.gnu.org/licenses/>.
           expressions (presumably because the user just edited them to
           exclude it), and if so, don't add it to the list of
           explicitly filtered jobs.</li>
+        <li>Fix automatic job filtering on click so that it works on
+          the job search page; previously it only worked on the
+          recommended jobs page.</li>
+        <li>Fix bug which could cause the extension, when trying to
+          hide a job on a company's page, to instead save it, i.e.,
+          add it to the user's saved jobs.</li>
         <li>Move the extension help to a separate page.</li>
         <li>Make changes to the "Hide filtered jobs completely"
-          checkbox save immediately instead of waiting for the user to
-          click the "Save" button.</li>
-        <li>Add this changelog page and make it open on install/update.</li>
+          checkbox on the options page save immediately instead of
+          waiting for the user to click the "Save" button.</li>
+        <li>Fix a bug which occasionally caused auto-filtered jobs to
+          fail to be saved and attempts to save options to fail with
+          the error, "This request exceeds the
+          MAX_WRITE_OPERATIONS_PER_MINUTE quota."</li>
         <li>Implement some performance improvements.</li>
       </ul>
+      <h3>Version 0.4</h3>
+      <p>(Version 0.4 was rightfully rejected by Google because it was
+        buggy so it was never published.)</p>
       <h3>Version 0.3</h3>
       <ul>
         <li><strong>Filter jobs automatically when the user clicks the

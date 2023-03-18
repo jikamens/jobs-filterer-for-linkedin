@@ -157,13 +157,15 @@ function setTextArea(id, regexps) {
         elt.value = "";
         return;
     }
-    elt.value = regexps.join("\n") + "\n";
+    elt.value = regexps.join("\n") + (regexps.length ? "\n" : "");
 }
 
 function populateJobsArea(filters) {
     if (! filters) return;
     filters = filters.map(f => `${f.title} // ${f.company} // ${f.location}`)
-    document.getElementById("jobs").value = filters.join("\n") + "\n";
+    document.getElementById("jobs").value = filters.join("\n") +
+        (filters.length ? "\n" : "");
+    
 }
 
 function optionsChanged(changes, namespace) {

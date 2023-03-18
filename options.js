@@ -122,7 +122,6 @@ function saveChanges(oldOptions, newOptions) {
         if (! utils.valuesAreEqual(value, oldOptions[key])) {
             changes[key] = value;
             changed = true;
-            console.log(`Saving ${key}=${value}`);
         }
     }
     if (! changed) {

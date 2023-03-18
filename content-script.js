@@ -65,7 +65,6 @@ function filterOneJob(elt) {
         elt.jobsFiltererFiltered = true;
         var jobSpec = getJobSpec(elt);
         if (! jobSpec) return;
-        console.log("filterOneJob", JSON.stringify(jobSpec));
         if ((matches(jobSpec.title, titleRegexps) ||
              matches(jobSpec.company, companyRegexps) ||
              matches(jobSpec.location, locationRegexps) ||
@@ -81,7 +80,6 @@ function filterOneJob(elt) {
             hideJob(jobSpec, elt);
         };
         hideButton.addEventListener("click", hideListener);
-        console.log("Wired hide button");
     }
     var unhideButton = findUnhideButton(elt);
     if (unhideButton && ! elt.jobsFiltererUnfiltered) {
@@ -94,7 +92,6 @@ function filterOneJob(elt) {
             setInterval(() => { unhideJob(elt); }, 2000);
         };
         unhideButton.addEventListener("click", unhideListener);
-        console.log("Wired unhide button");
     }
 }
 

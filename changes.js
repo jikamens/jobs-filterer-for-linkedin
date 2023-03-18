@@ -15,7 +15,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
 function saveOptions() {
-    console.log("foo");
     var show = document.getElementById("showChanges").checked;
     chrome.storage.sync.set({showChanges: show}).then();
 }

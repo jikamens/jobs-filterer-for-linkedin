@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
+import argparse
 import re
 from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By
 import tempfile
 import time
@@ -15,13 +20,26 @@ company_selector = (".job-card-container__primary-description, "
 location_selector = ".job-card-container__metadata-item"
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Test LinkedIn Jobs Filterer")
+    parser.add_argument("--headless", action="store_true", default=False)
+    return parser.parse_args()
+
+
 def main():
     config = yaml.load(open(config_file), yaml.Loader)
+    args = parse_args()
     with tempfile.TemporaryDirectory() as user_data_directory:
         options = webdriver.ChromeOptions()
+        if args.headless:
+            options.add_argument("headless=new")
+        # Needs to be big enough to prevent the Messaging banner from obscuring
+        # the first listed job even when Messaging is hidden.
+        options.add_argument("window-size=1280,1024")
         options.add_argument(f"user-data-dir={user_data_directory}")
         options.add_extension("LinkedInJobsFilterer.zip")
         driver = webdriver.Chrome(options=options)
+        print(driver.get_window_size())
         run_tests(config, driver)
         driver.quit()
 
@@ -29,7 +47,7 @@ def main():
 def run_tests(config, driver):
     # Did the changelog page load on install?
     start = time.time()
-    while len(driver.window_handles) == 1 and time.time() - start < 1:
+    while len(driver.window_handles) == 1 and time.time() - start < 2:
         time.sleep(0.1)
     driver.switch_to.window(driver.window_handles[1])
 
@@ -57,20 +75,53 @@ def run_tests(config, driver):
     driver.find_element(By.ID, "password").send_keys(
         config["linkedin_password"])
     driver.find_element(By.XPATH, "//*[@aria-label='Sign in']").click()
-    try:
-        mfa_field = driver.find_element(By.ID, "input__phone_verification_pin")
-    except Exception:
-        pass
-    else:
-        mfa_code = input("Enter MFA code: ")
-        mfa_field.send_keys(mfa_code)
-        driver.find_element(By.ID, "two-step-submit-button").click()
 
-    test_job_on_page(driver, "https://www.linkedin.com/jobs",
-                     linkedin_window_handle, options_window_handle)
-    test_job_on_page(driver, "https://www.linkedin.com/jobs/search/"
-                     "keywords=Quality%20Assurance%20Engineer",
-                     linkedin_window_handle, options_window_handle)
+    state = None
+    while state != "homepage":
+        (state, elt) = wait_for(
+            lambda: ("2fa", driver.find_element(
+                By.ID, "input__phone_verification_pin")),
+            lambda: ("captcha", driver.find_element(
+                By.ID, "captcha-internal")),
+            lambda: ("challenge", driver.find_element(
+                By.NAME, "challengeType")),
+            lambda: ("homepage", driver.find_element(
+                By.PARTIAL_LINK_TEXT, "Notifications"))
+        )
+        if state == "2fa":
+            mfa_code = input("Enter MFA code: ")
+            elt.send_keys(mfa_code)
+            driver.find_element(By.ID, "two-step-submit-button").click()
+        elif state == "captcha":
+            input("Solve CAPTCHA and then hit Enter: ")
+        elif state == "challenge":
+            input("Complete challenge and then hit Enter: ")
+
+    try:
+        test_job_on_page(driver, "https://www.linkedin.com/jobs",
+                         linkedin_window_handle, options_window_handle)
+        test_job_on_page(driver, "https://www.linkedin.com/jobs/search/"
+                         "keywords=Quality%20Assurance%20Engineer",
+                         linkedin_window_handle, options_window_handle)
+    except ElementClickInterceptedException:
+        fn = "/tmp/litest_screenshot.png"
+        driver.save_screenshot(fn)
+        print(f"Element click intercepted, screenshot saved in {fn}")
+        raise
+
+
+def hide_messaging(driver):
+    # If Messaging is showing it can block other buttons.
+    state = None
+    while state != "hidden":
+        (state, elt) = wait_for(
+            lambda: ("hidden", driver.find_element(
+                By.XPATH, "//*[@id='msg-overlay']//*[@type='chevron-up']")),
+            lambda: ("showing", driver.find_element(
+                By.XPATH, "//*[@id='msg-overlay']//*[@type='chevron-down']")),
+        )
+        if state == "showing":
+            elt.click()
 
 
 def test_job_on_page(driver, url,
@@ -78,6 +129,7 @@ def test_job_on_page(driver, url,
     # Can we find and hide a job?
     driver.switch_to.window(linkedin_window_handle)
     driver.get(url)
+    hide_messaging(driver)
     # We need to wait until we see the first job _title_ before we look for
     # the first _job_ because empty jobs show up temporarily on the page and
     # are then replaced by the real ones with contents (like job title).
@@ -124,14 +176,18 @@ def test_job_on_page(driver, url,
              get_attribute("value") == "")
 
 
-def wait_for(func):
+def wait_for(*funcs):
     sleep_for = 0.1
     start = time.time()
     limit = 10
     while time.time() - start < limit:
-        result = func()
-        if result:
-            return result
+        for func in funcs:
+            try:
+                result = func()
+            except NoSuchElementException:
+                continue
+            if result:
+                return result
         time.sleep(sleep_for)
         sleep_for *= 2
     raise Exception("Timeout")
@@ -154,5 +210,5 @@ def find_unhide_button(driver, elt):
     return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

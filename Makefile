@@ -33,7 +33,7 @@ lint: $(ESLINT)
 	flake8 run-tests.py
 
 test: test-config.yml $(NAME).zip
-	./run-tests.py
+	./run-tests.py $(TEST_ARGS)
 
 $(ESLINT):
 	npm install

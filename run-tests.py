@@ -39,7 +39,6 @@ def main():
         options.add_argument(f"user-data-dir={user_data_directory}")
         options.add_extension("LinkedInJobsFilterer.zip")
         driver = webdriver.Chrome(options=options)
-        print(driver.get_window_size())
         run_tests(config, driver)
         driver.quit()
 

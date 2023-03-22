@@ -37,7 +37,7 @@ def main():
         # the first listed job even when Messaging is hidden.
         options.add_argument("window-size=1280,1024")
         options.add_argument(f"user-data-dir={user_data_directory}")
-        options.add_extension("LinkedInJobsFilterer.zip")
+        options.add_extension("LinkedInJobsFilterer-test.zip")
         driver = webdriver.Chrome(options=options)
         run_tests(config, driver)
         driver.quit()
@@ -83,6 +83,22 @@ def run_tests(config, driver):
     wait_for(lambda: "Options saved" in
              driver.find_element(By.ID, "status").get_attribute("innerText"))
     driver.close()
+
+    # Run JavaScript tests
+    driver.switch_to.window(options_window_handle)
+    test_load_script = """
+        var tests;
+        await (async () => {
+            const src = chrome.runtime.getURL("tests.js");
+            tests = await import(src);
+        })();
+        return await tests.runTests();
+    """
+    test_result = driver.execute_script(test_load_script)
+    if test_result != "success":
+        print("JavaScript tests failed")
+        import pdb
+        pdb.set_trace()
 
     # Log into LinkedIn
     driver.switch_to.new_window("tab")

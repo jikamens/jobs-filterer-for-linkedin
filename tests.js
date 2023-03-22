@@ -1,0 +1,64 @@
+/*
+Copyright 2023 Jonathan Kamens.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+var utils;
+
+await (async () => {
+    const src = chrome.runtime.getURL("utils.js");
+    utils = await import(src);
+})();
+
+async function testOldLoad() {
+    var data = [1, 2, 3];
+    await chrome.storage.sync.set({foobar: data});
+    var result = await utils.readListFromStorage("foobar");
+    await chrome.storage.sync.remove("foobar");
+    return utils.valuesAreEqual(data, result);
+}
+
+async function testNewLoad() {
+    var data = [1, 2, 3];
+    await chrome.storage.sync.set({
+        foobar0: data.slice(0, 2),
+        foobar1: data.slice(2)});
+    var result = await utils.readListFromStorage("foobar");
+    await chrome.storage.sync.remove(["foobar0", "foobar1"]);
+    return utils.valuesAreEqual(data, result);
+}
+
+async function testSave() {
+    var data = []
+    while (JSON.stringify(data).length < 8192)
+        data.push(String(Math.random()));
+    await utils.saveListToStorage("foobar", data);
+    var stored = await chrome.storage.sync.get();
+    if (stored.foobar0 == undefined || stored.foobar1 == undefined ||
+        stored.foobar2 != undefined) {
+        console.log("Unexpected storage", stored);
+        return false;
+    }
+    var result = await utils.readListFromStorage("foobar");
+    await chrome.storage.sync.remove(["foobar0", "foobar1"]);
+    return utils.valuesAreEqual(data, result);
+}
+
+export async function runTests() {
+    for (var func of [testOldLoad, testNewLoad, testSave]) {
+        if (! await func())
+            return "failure";
+    }
+    return "success";
+}

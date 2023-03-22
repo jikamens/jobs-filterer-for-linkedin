@@ -7,15 +7,21 @@ NAME=LinkedInJobsFilterer
 # their directories.
 #
 #PRIVATE_KEY=key.pem
-FILES=$(wildcard *.js) $(wildcard *.html) manifest.json options.html \
-	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
+TEST_FILES=$(wildcard *.js) $(wildcard *.html) manifest.json options.html \
+	     icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
+SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))
 ESLINT=node_modules/.bin/eslint
 
 all: $(NAME).zip
 
-$(NAME).zip: $(foreach f,$(FILES),build/$(f))
+$(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
 	rm -f build/$@.tmp
-	cd build && zip -r $@.tmp $(FILES)
+	cd build && zip -r $@.tmp $(SHIP_FILES)
+	mv -f build/$@.tmp $@
+
+$(NAME)-test.zip: $(foreach f,$(TEST_FILES),build/$(f))
+	rm -f build/$@.tmp
+	cd build && zip -r $@.tmp $(TEST_FILES)
 	mv -f build/$@.tmp $@
 
 build/manifest.json: manifest.json
@@ -32,11 +38,11 @@ lint: $(ESLINT)
 	$(ESLINT) .
 	flake8 run-tests.py
 
-test: test-config.yml $(NAME).zip
+test: test-config.yml $(NAME)-test.zip
 	./run-tests.py $(TEST_ARGS)
 
 $(ESLINT):
 	npm install
 
 clean:
-	rm -rf $(NAME).zip build
+	rm -rf $(NAME).zip $(NAME)-test.zip build

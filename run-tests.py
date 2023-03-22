@@ -61,9 +61,28 @@ def run_tests(config, driver):
     assert "Example workflow" in driver.page_source
 
     # Can we load the options page with expected content?
-    driver.get(f"chrome-extension://{extension_id}/options.html")
+    options_page = f"chrome-extension://{extension_id}/options.html"
+    driver.get(options_page)
     driver.find_element(By.ID, "hideJobs")
     options_window_handle = driver.current_window_handle
+
+    driver.find_element(By.ID, "titles").send_keys("TitleRegexp")
+    driver.find_element(By.ID, "companies").send_keys("CompanyRegexp")
+    driver.find_element(By.ID, "locations").send_keys("LocationRegexp")
+    driver.find_element(By.ID, "jobs").send_keys(
+        "Title // Company // Location")
+    driver.find_element(By.ID, "save").click()
+    wait_for(lambda: "Options saved" in
+             driver.find_element(By.ID, "status").get_attribute("innerText"))
+    driver.switch_to.new_window("tab")
+    driver.get(options_page)
+    wait_for(lambda: driver.find_element(By.ID, "titles").
+             get_attribute("value") == "TitleRegexp\n")
+    driver.find_element(By.ID, "jobs").clear()
+    driver.find_element(By.ID, "save").click()
+    wait_for(lambda: "Options saved" in
+             driver.find_element(By.ID, "status").get_attribute("innerText"))
+    driver.close()
 
     # Log into LinkedIn
     driver.switch_to.new_window("tab")

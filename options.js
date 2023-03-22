@@ -16,10 +16,12 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 var utils;
 
-(async () => {
+async function loadUtils() {
+    if (utils)
+        return;
     const src = chrome.runtime.getURL("utils.js");
     utils = await import(src);
-})();
+}
 
 function getTextArea(id) {
     var elt = document.getElementById(id);
@@ -111,43 +113,50 @@ function saveOptions() {
     };
 
     chrome.storage.sync.get().then((oldOptions) => {
-        saveChanges(oldOptions, newOptions);
+        saveChanges(oldOptions, newOptions).then();
     });
 }
 
-function saveChanges(oldOptions, newOptions) {
-    var changes = {};
+async function saveChanges(oldOptions, newOptions) {
+    await loadUtils();
+    var status = document.getElementById("status");
+    var booleans = {};
+    var lists = {}
     var changed = false;
     for (var [key, value] of Object.entries(newOptions)) {
         if (! utils.valuesAreEqual(value, oldOptions[key])) {
-            changes[key] = value;
+            if (typeof(value) == "boolean")
+                booleans[key] = value;
+            else
+                lists[key] = value;
             changed = true;
         }
     }
     if (! changed) {
-        var status = document.getElementById("status");
         status.innerHTML = "<font color='green'>No changes.</font>";
         setTimeout(function() {
             status.textContent = "";
         }, 1000);
         return;
     }
-    chrome.storage.sync.set(changes).then(() => {
-        // Update status to let user know options were saved.
-        var status = document.getElementById("status");
+    try {
+        await chrome.storage.sync.set(booleans);
+        for ([key, value] of Object.entries(lists)) {
+            await utils.saveListToStorage(key, value);
+        }
         status.innerHTML = "<font color='green'>Options saved.</font>";
         setTimeout(function() {
             status.textContent = "";
         }, 1000);
-    }).catch((error) => {
-        var status = document.getElementById("status");
+    }
+    catch (error) {
         var msg = escapeHTML(error.message);
         status.innerHTML =
             `<font color='red'>Error saving options: ${msg}</font>`;
         setTimeout(function() {
             status.textContent = "";
         }, 1000);
-    });
+    }
 }
 
 function setTextArea(id, regexps) {
@@ -169,30 +178,33 @@ function populateJobsArea(filters) {
 
 function optionsChanged(changes, namespace) {
     if (namespace != "sync") return;
-    if (changes.jobFilters?.newValue === undefined) return;
-    populateJobsArea(changes.jobFilters.newValue)
+    restoreOptions();
 }
 
-function restoreOptions() {
-    chrome.storage.onChanged.addListener(optionsChanged);
-    chrome.storage.sync.get().then((options) => {
-        // Backward compatibility, remove eventually
-        if (options["jobRegexps"] && !options["titleRegexps"])
-            options["titleRegexps"] = options["jobRegexps"];
-        document.getElementById("hideJobs").checked = options["hideJobs"];
-        var show;
-        if (options["showChanges"] === undefined)
-            show = true;
-        else
-            show = options["showChanges"];
-        document.getElementById("showChanges").checked = show;
-        setTextArea("titles", options["titleRegexps"]);
-        setTextArea("companies", options["companyRegexps"]);
-        setTextArea("locations", options["locationRegexps"]);
-        populateJobsArea(options["jobFilters"]);
-    });
+async function restoreOptions() {
+    await loadUtils();
+    var booleans = await chrome.storage.sync.get(["hideJobs", "showChanges"]);
+    var titleRegexps = await utils.readListFromStorage("titleRegexps");
+    var companyRegexps = await utils.readListFromStorage("companyRegexps");
+    var locationRegexps = await utils.readListFromStorage("locationRegexps");
+    var jobFilters = await utils.readListFromStorage("jobFilters");
+
+    document.getElementById("hideJobs").checked = booleans["hideJobs"];
+
+    var show;
+    if (booleans["showChanges"] === undefined)
+        show = true;
+    else
+        show = booleans["showChanges"];
+    document.getElementById("showChanges").checked = show;
+
+    setTextArea("titles", titleRegexps);
+    setTextArea("companies", companyRegexps);
+    setTextArea("locations", locationRegexps);
+    populateJobsArea(jobFilters);
 }
 
+chrome.storage.onChanged.addListener(optionsChanged);
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.getElementById("save").addEventListener("click", saveOptions);
 document.getElementById("hideJobs").addEventListener("change", saveOptions);

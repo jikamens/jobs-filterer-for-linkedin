@@ -16,10 +16,12 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 var utils;
 
-(async () => {
+async function loadUtils() {
+    if (utils)
+        return;
     const src = chrome.runtime.getURL("utils.js");
     utils = await import(src);
-})();
+}
 
 const cardClasses = ["jobs-search-results__list-item",
                      "jobs-job-board-list__item"];
@@ -128,7 +130,7 @@ function hideJob(jobSpec) {
         jobMatches(jobSpec))
         return;
     jobFilters.unshift(jobSpec);
-    chrome.storage.sync.set({jobFilters: jobFilters}).then();
+    utils.saveListToStorage("jobFilters", jobFilters).then();
 }
 
 function unhideJob(elt) {
@@ -143,10 +145,10 @@ function unhideJob(elt) {
             jobFilters.splice(i, 1);
         }
     if (changed)
-        chrome.storage.sync.set({jobFilters: jobFilters}).then();
+        utils.saveListToStorage("jobFilters", jobFilters).then();
 }
 
-function filterAllJobs() {
+function filterEverything() {
     var elts = document.querySelectorAll(
         cardClasses.map(c => `.${c}`).join(", "));
     for (var elt of elts) {
@@ -154,12 +156,21 @@ function filterAllJobs() {
     }
 }
 
-function loadOptions() {
-    chrome.storage.sync.get().then((options) => {
-        titleRegexps = compileRegexps(options["titleRegexps"]);
-        companyRegexps = compileRegexps(options["companyRegexps"]);
-        locationRegexps = compileRegexps(options["locationRegexps"]);
-        jobFilters = options["jobFilters"] || [];
+async function loadOptions() {
+    await loadUtils();
+    utils.readListFromStorage("titleRegexps").then((items) => {
+        titleRegexps = compileRegexps(items);
+    });
+    utils.readListFromStorage("companyRegexps").then((items) => {
+        companyRegexps = compileRegexps(items);
+    });
+    utils.readListFromStorage("locationRegexps").then((items) => {
+        locationRegexps = compileRegexps(items);
+    });
+    utils.readListFromStorage("jobFilters").then((items) => {
+        jobFilters = items;
+    });
+    chrome.storage.sync.get(["hideJobs"]).then((options) => {
         hideJobs = options["hideJobs"];
     });
 }
@@ -178,16 +189,6 @@ function compileRegexps(regexps) {
         compiled.push(regexp);
     }
     return compiled;
-}
-
-function filterEverything() {
-    chrome.storage.sync.get().then((options) => {
-        // Backward compatibility, remove eventually
-        if (options["jobRegexps"] && !options["titleRegexps"])
-            options["titleRegexps"] = options["jobRegexps"];
-        options["jobFilters"] ||= [];
-        filterAllJobs();
-    });
 }
 
 var topObserver = null;

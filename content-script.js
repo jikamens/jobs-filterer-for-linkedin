@@ -170,21 +170,15 @@ function filterEverything() {
 
 async function loadOptions() {
     await loadUtils();
-    utils.readListFromStorage("titleRegexps").then((items) => {
-        titleRegexps = compileRegexps(items);
-    });
-    utils.readListFromStorage("companyRegexps").then((items) => {
-        companyRegexps = compileRegexps(items);
-    });
-    utils.readListFromStorage("locationRegexps").then((items) => {
-        locationRegexps = compileRegexps(items);
-    });
-    utils.readListFromStorage("jobFilters").then((items) => {
-        jobFilters = items;
-    });
-    chrome.storage.sync.get(["hideJobs"]).then((options) => {
-        hideJobs = options["hideJobs"];
-    });
+    titleRegexps = compileRegexps(
+        await utils.readListFromStorage("titleRegexps"));
+    companyRegexps = compileRegexps(
+        await utils.readListFromStorage("companyRegexps"));
+    locationRegexps = compileRegexps(
+        await utils.readListFromStorage("locationRegexps"));
+    jobFilters = await utils.readListFromStorage("jobFilters");
+    var options = await chrome.storage.sync.get(["hideJobs"]);
+    hideJobs = options["hideJobs"];
 }
 
 function compileRegexps(regexps) {
@@ -205,7 +199,7 @@ function compileRegexps(regexps) {
 
 var topObserver = null;
 
-function createTopObserver() {
+async function createTopObserver() {
     var config = {childList: true, subtree: true};
     // eslint-disable-next-line no-unused-vars
     var callback = (mutationList, observer) => {
@@ -215,11 +209,7 @@ function createTopObserver() {
     topObserver.observe(document.body, config);
 }
 
-if (! topObserver) {
-    createTopObserver();
-}
-
-loadOptions();
+loadOptions().then(() => { createTopObserver(); });
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace != "sync") return;
     loadOptions();

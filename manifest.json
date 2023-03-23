@@ -14,7 +14,7 @@
     "web_accessible_resources": [
         {
             "matches": ["https://www.linkedin.com/*"],
-            "resources": ["utils.js"]
+            "resources": ["icons/16.png"]
         }
     ],
     "background": {

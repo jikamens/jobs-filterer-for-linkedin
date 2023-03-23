@@ -26,7 +26,25 @@ var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs,
     buttonIconURL;
 
 async function getButtonIconURL() {
-    buttonIconURL = chrome.runtime.getURL("icons/16.png");
+    var response = await fetch(chrome.runtime.getURL("icons/16.png"));
+    var reader = response.body.getReader();
+    var data;
+    while (response = await reader.read()) {
+        if (response.done)
+            break;
+        if (data == undefined)
+            data = response.value;
+        else
+            data = new Uint8Array([data, response.value]);
+    }
+    // Courtesy of https://stackoverflow.com/a/66046176
+    var promise = new Promise((r) => {
+        var reader = new FileReader();
+        reader.onload = () => r(reader.result);
+        reader.readAsDataURL(new Blob([data]));
+    });
+    buttonIconURL = (await promise).replace("application/octet-stream",
+                                            "image/png");
 }
 
 function findDismissButton(elt) {

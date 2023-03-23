@@ -1,4 +1,7 @@
 *.zip
 build
+content-script.js
 node_modules
+options.js
 test-config.yml
+tests.js

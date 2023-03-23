@@ -7,12 +7,14 @@ NAME=LinkedInJobsFilterer
 # their directories.
 #
 #PRIVATE_KEY=key.pem
-TEST_FILES=$(wildcard *.js) $(wildcard *.html) manifest.json options.html \
-	     icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
+GEN_JS_FILES=$(patsubst %.in,%,$(wildcard *.js.in))
+TEST_FILES=$(filter-out utils.js,$(wildcard *.js)) $(GEN_JS_FILES) \
+	$(wildcard *.html) manifest.json options.html \
+	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
 SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))
 ESLINT=node_modules/.bin/eslint
 
-all: $(NAME).zip
+all: $(NAME).zip $(NAME)-test.zip $(GEN_JS_FILES)
 
 $(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
 	rm -f build/$@.tmp
@@ -32,7 +34,7 @@ build/manifest.json: manifest.json
 
 build/%: %
 	@mkdir -p $(dir $@)
-	cp $< $@
+	cp -f $< $@
 
 lint: $(ESLINT)
 	$(ESLINT) .
@@ -45,4 +47,24 @@ $(ESLINT):
 	npm install
 
 clean:
-	rm -rf $(NAME).zip $(NAME)-test.zip build
+	rm -rf $(NAME).zip $(NAME)-test.zip build $(GEN_JS_FILES)
+
+# "Why isn't utils.js a JavaScript module that's imported into the other files
+# that need its functions?" you ask? Because when it is, then whenever the
+# extension is updated in a running Chrome instance, utils.js starts failing
+# to import with the error "Failed to fetch dynamically imported module." I
+# spent hours banging my head against this trying to figure out what's causing
+# it and how to fix it and eventually gave up. The path of least resistence is
+# to just embed a copy of the code in all the files that need it.
+%.js: %.js.in utils.js
+	rm -f $@ $@.tmp
+	cp /dev/null $@.tmp
+	echo "// Included from utils.js" >> $@.tmp
+	cat utils.js >> $@.tmp
+	echo "// Original $@.in" >> $@.tmp
+	cat $@.in >> $@.tmp
+	chmod a-w $@.tmp
+	mv $@.tmp $@
+
+.NOTINTERMEDIATE: $(GEN_JS_FILES)
+

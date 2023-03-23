@@ -14,15 +14,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-var utils;
-
-async function loadUtils() {
-    if (utils)
-        return;
-    const src = chrome.runtime.getURL("utils.js");
-    utils = await import(src);
-}
-
 function getTextArea(id) {
     var elt = document.getElementById(id);
     var items = elt.value.split("\n");
@@ -118,7 +109,6 @@ function saveOptions() {
 }
 
 async function saveChanges(oldOptions, newOptions) {
-    await loadUtils();
     var status = document.getElementById("status");
     var booleans = {};
     var lists = {}
@@ -182,7 +172,6 @@ function optionsChanged(changes, namespace) {
 }
 
 async function restoreOptions() {
-    await loadUtils();
     var booleans = await chrome.storage.sync.get(["hideJobs", "showChanges"]);
     var titleRegexps = await utils.readListFromStorage("titleRegexps");
     var companyRegexps = await utils.readListFromStorage("companyRegexps");

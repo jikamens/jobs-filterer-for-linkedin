@@ -14,13 +14,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-var utils;
-
-await (async () => {
-    const src = chrome.runtime.getURL("utils.js");
-    utils = await import(src);
-})();
-
 async function testOldLoad() {
     var data = [1, 2, 3];
     await chrome.storage.sync.set({foobar: data});

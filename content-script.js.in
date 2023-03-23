@@ -14,15 +14,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-var utils;
-
-async function loadUtils() {
-    if (utils)
-        return;
-    const src = chrome.runtime.getURL("utils.js");
-    utils = await import(src);
-}
-
 const cardClasses = ["jobs-search-results__list-item",
                      "jobs-job-board-list__item"];
 const companyClasses = ["job-card-container__primary-description",
@@ -169,7 +160,6 @@ function filterEverything() {
 }
 
 async function loadOptions() {
-    await loadUtils();
     titleRegexps = compileRegexps(
         await utils.readListFromStorage("titleRegexps"));
     companyRegexps = compileRegexps(

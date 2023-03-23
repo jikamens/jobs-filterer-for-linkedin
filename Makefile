@@ -7,7 +7,7 @@ NAME=LinkedInJobsFilterer
 # their directories.
 #
 #PRIVATE_KEY=key.pem
-GEN_JS_FILES=$(patsubst %.in,%,$(wildcard *.js.in))
+GEN_JS_FILES=$(patsubst %.in,%,$(wildcard *.js.in)) button.js
 TEST_FILES=$(filter-out utils.js,$(wildcard *.js)) $(GEN_JS_FILES) \
 	$(wildcard *.html) manifest.json options.html \
 	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
@@ -63,6 +63,24 @@ clean:
 	cat utils.js >> $@.tmp
 	echo "// Original $@.in" >> $@.tmp
 	cat $@.in >> $@.tmp
+	chmod a-w $@.tmp
+	mv $@.tmp $@
+
+content-script.js: content-script.js.in utils.js button.js
+	rm -f $@ $@.tmp
+	cp /dev/null $@.tmp
+	echo "// Included from utils.js" >> $@.tmp
+	cat utils.js >> $@.tmp
+	echo "// Included from button.js" >> $@.tmp
+	cat button.js >> $@.tmp
+	echo "// Original $@.in" >> $@.tmp
+	cat $@.in >> $@.tmp
+	chmod a-w $@.tmp
+	mv $@.tmp $@
+
+button.js: icons/16.png
+	rm -f $@ $@.tmp
+	echo "var buttonIconURL = 'data:image/png;base64,$$(base64 < $< | tr -d '\n')';" > $@.tmp
 	chmod a-w $@.tmp
 	mv $@.tmp $@
 

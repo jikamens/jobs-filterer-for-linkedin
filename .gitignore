@@ -1,4 +1,5 @@
 *.zip
+button.js
 build
 content-script.js
 node_modules

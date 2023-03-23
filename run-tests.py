@@ -18,6 +18,7 @@ title_selector = ".job-card-list__title"
 company_selector = (".job-card-container__primary-description, "
                     ".job-card-container__company-name")
 location_selector = ".job-card-container__metadata-item"
+workplace_selector = ".job-card-container__metadata-item--workplace-type"
 
 
 def parse_args():
@@ -191,8 +192,7 @@ def test_job_on_page(driver, url,
         By.CSS_SELECTOR, title_selector))[0].text
     job_company = wait_for(lambda: first_job.find_elements(
         By.CSS_SELECTOR, company_selector))[0].text
-    job_location = wait_for(lambda: first_job.find_elements(
-        By.CSS_SELECTOR, location_selector))[0].text
+    job_location = get_location(first_job)
     time.sleep(1)  # Make sure the extension has had time to wire the button.
     hide_button = wait_for(lambda: find_hide_button(driver, first_job))
     hide_button.click()
@@ -213,6 +213,15 @@ def test_job_on_page(driver, url,
     driver.switch_to.window(options_window_handle)
     wait_for(lambda: driver.find_element(By.ID, "jobs").
              get_attribute("value") == "")
+
+
+def get_location(elt):
+    job_location = wait_for(lambda: elt.find_elements(
+        By.CSS_SELECTOR, location_selector))[0].text
+    workplaces = elt.find_elements(By.CSS_SELECTOR, workplace_selector)
+    if workplaces:
+        job_location = f"{job_location} ({workplaces[0].text})"
+    return job_location
 
 
 def wait_for(*funcs):

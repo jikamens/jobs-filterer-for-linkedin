@@ -29,6 +29,7 @@ const companyClasses = ["job-card-container__primary-description",
                         "job-card-container__company-name"];
 const titleClasses = ["job-card-list__title"];
 const locationClasses = ["job-card-container__metadata-item"];
+const workplaceClasses = ["job-card-container__metadata-item--workplace-type"]
 
 var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs;
 
@@ -36,7 +37,8 @@ function findDismissButton(elt) {
     var elts = elt.getElementsByTagName("button");
     for (elt of elts) {
         var label = elt.getAttribute("aria-label");
-        if (label && (label.includes("Hide") || label.includes("Dismiss")))
+        if (label && (label.includes("Hide") || label.includes("Dismiss") ||
+                      /^Mark .* with Not for me/.test(label)))
             return elt;
     }
     return null;
@@ -50,11 +52,21 @@ function findUnhideButton(elt) {
     return null;
 }
 
+function getLocation(elt) {
+    var location = getClassValue(locationClasses, elt)
+    if (! location)
+        return false;
+    var workplace = getClassValue(workplaceClasses, elt)
+    if (workplace)
+        location = `${location} (${workplace})`;
+    return location;
+}
+
 function getJobSpec(elt) {
     var spec = {
         title: getClassValue(titleClasses, elt),
         company: getClassValue(companyClasses, elt),
-        location: getClassValue(locationClasses, elt)
+        location: getLocation(elt)
     };
     if (! (spec.title && spec.company && spec.location))
         return null;

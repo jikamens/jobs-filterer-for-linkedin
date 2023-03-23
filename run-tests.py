@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import pdb
 import re
 from selenium import webdriver
 from selenium.common.exceptions import (
@@ -98,7 +99,6 @@ def run_tests(config, driver):
     test_result = driver.execute_script(test_load_script)
     if test_result != "success":
         print("JavaScript tests failed")
-        import pdb
         pdb.set_trace()
 
     # Log into LinkedIn
@@ -147,7 +147,7 @@ def run_tests(config, driver):
         fn = "/tmp/litest_screenshot.png"
         driver.save_screenshot(fn)
         print(f"Element click intercepted, screenshot saved in {fn}")
-        raise
+        pdb.set_trace()
 
 
 def hide_messaging(driver):
@@ -193,7 +193,7 @@ def test_job_on_page(driver, url,
     job_company = wait_for(lambda: first_job.find_elements(
         By.CSS_SELECTOR, company_selector))[0].text
     job_location = get_location(first_job)
-    time.sleep(1)  # Make sure the extension has had time to wire the button.
+
     hide_button = wait_for(lambda: find_hide_button(driver, first_job))
     hide_button.click()
 
@@ -205,8 +205,7 @@ def test_job_on_page(driver, url,
 
     # Can we find and unhide the same job?
     driver.switch_to.window(linkedin_window_handle)
-    time.sleep(1)  # Make sure the extension has had time to wire the button.
-    unhide_button = wait_for(lambda: find_unhide_button(driver, driver))
+    unhide_button = wait_for(lambda: find_unhide_button(driver))
     unhide_button.click()
 
     # Does the unhidden job get removed from the options page?
@@ -238,10 +237,12 @@ def wait_for(*funcs):
                 return result
         time.sleep(sleep_for)
         sleep_for *= 2
-    raise Exception("Timeout")
+    pdb.set_trace()
 
 
 def find_hide_button(driver, elt):
+    if not elt.get_attribute("jobsFiltererFiltered"):
+        return None
     elts = elt.find_elements(By.TAG_NAME, "button")
     for elt in elts:
         label = elt.get_attribute("aria-label")
@@ -250,8 +251,13 @@ def find_hide_button(driver, elt):
     return None
 
 
-def find_unhide_button(driver, elt):
-    elts = elt.find_elements(By.TAG_NAME, "button")
+def find_unhide_button(driver):
+    for job in driver.find_elements(By.CSS_SELECTOR, job_selector):
+        if job.get_attribute("jobsFiltererUnfiltered"):
+            break
+    else:
+        return None
+    elts = job.find_elements(By.TAG_NAME, "button")
     for elt in elts:
         if elt.text == "Undo":
             return elt

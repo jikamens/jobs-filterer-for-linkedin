@@ -75,8 +75,8 @@ function getJobSpec(elt) {
 
 function filterOneJob(elt) {
     var hideButton = findDismissButton(elt);
-    if (hideButton && ! elt.jobsFiltererFiltered) {
-        elt.jobsFiltererFiltered = true;
+    if (hideButton && ! elt.getAttribute("jobsFiltererFiltered")) {
+        elt.setAttribute("jobsFiltererFiltered", true);
         var jobSpec = getJobSpec(elt);
         if (! jobSpec) return;
         if ((matches(jobSpec.title, titleRegexps) ||
@@ -96,8 +96,8 @@ function filterOneJob(elt) {
         hideButton.addEventListener("click", hideListener);
     }
     var unhideButton = findUnhideButton(elt);
-    if (unhideButton && ! elt.jobsFiltererUnfiltered) {
-        elt.jobsFiltererUnfiltered = true;
+    if (unhideButton && ! elt.getAttribute("jobsFiltererUnfiltered")) {
+        elt.setAttribute("jobsFiltererUnfiltered", true);
         var unhideListener;
         unhideListener = (event) => {
             event.currentTarget.removeEventListener("click", unhideListener);

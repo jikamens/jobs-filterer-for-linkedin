@@ -83,6 +83,9 @@ def run_tests(config, driver):
     driver.find_element(By.ID, "save").click()
     wait_for(lambda: "Options saved" in
              driver.find_element(By.ID, "status").get_attribute("innerText"))
+    driver.find_element(By.ID, "save").click()
+    wait_for(lambda: "No changes" in
+             driver.find_element(By.ID, "status").get_attribute("innerText"))
     driver.switch_to.new_window("tab")
     driver.get(options_page)
     wait_for(lambda: driver.find_element(By.ID, "titles").

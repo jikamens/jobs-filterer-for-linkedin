@@ -113,9 +113,19 @@ function saveOptions() {
         jobFilters: jobFilters
     };
 
-    chrome.storage.sync.get().then((oldOptions) => {
+    getAllOptions().then((oldOptions) => {
         saveChanges(oldOptions, newOptions).then();
     });
+}
+
+async function getAllOptions() {
+    var options = await chrome.storage.sync.get(["hideJobs", "showChanges"]);
+    options.titleRegexps = await utils.readListFromStorage("titleRegexps");
+    options.companyRegexps = await utils.readListFromStorage("companyRegexps");
+    options.locationRegexps =
+        await utils.readListFromStorage("locationRegexps");
+    options.jobFilters = await utils.readListFromStorage("jobFilters");
+    return options;
 }
 
 async function saveChanges(oldOptions, newOptions) {
@@ -188,25 +198,21 @@ function optionsChanged(changes, namespace) {
 }
 
 async function restoreOptions() {
-    var booleans = await chrome.storage.sync.get(["hideJobs", "showChanges"]);
-    var titleRegexps = await utils.readListFromStorage("titleRegexps");
-    var companyRegexps = await utils.readListFromStorage("companyRegexps");
-    var locationRegexps = await utils.readListFromStorage("locationRegexps");
-    var jobFilters = await utils.readListFromStorage("jobFilters");
+    var options = await getAllOptions();
 
-    document.getElementById("hideJobs").checked = booleans["hideJobs"];
+    document.getElementById("hideJobs").checked = options["hideJobs"];
 
     var show;
-    if (booleans["showChanges"] === undefined)
+    if (options["showChanges"] === undefined)
         show = true;
     else
-        show = booleans["showChanges"];
+        show = options["showChanges"];
     document.getElementById("showChanges").checked = show;
 
-    setTextArea("titles", titleRegexps);
-    setTextArea("companies", companyRegexps);
-    setTextArea("locations", locationRegexps);
-    populateJobsArea(jobFilters);
+    setTextArea("titles", options.titleRegexps);
+    setTextArea("companies", options.companyRegexps);
+    setTextArea("locations", options.locationRegexps);
+    populateJobsArea(options.jobFilters);
 }
 
 chrome.storage.onChanged.addListener(optionsChanged);

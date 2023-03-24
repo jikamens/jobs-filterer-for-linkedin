@@ -215,8 +215,17 @@ async function restoreOptions() {
     populateJobsArea(options.jobFilters);
 }
 
+function checkForSaveKey(event) {
+    if (event.isComposing || event.keyCode == 229 || !event.altKey)
+        return;
+    console.log(event.key);
+    if (["s", "S"].includes(event.key))
+        saveOptions();
+}
+
 chrome.storage.onChanged.addListener(optionsChanged);
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.getElementById("save").addEventListener("click", saveOptions);
 document.getElementById("hideJobs").addEventListener("change", saveOptions);
 document.getElementById("showChanges").addEventListener("change", saveOptions);
+document.addEventListener("keydown", checkForSaveKey);

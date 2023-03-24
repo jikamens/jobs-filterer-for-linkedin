@@ -26,6 +26,15 @@ this program. If not, see <https://www.gnu.org/licenses/>.
       <h2>LinkedIn Jobs Filterer change history</h2>
       <h3>Version 0.7</h3>
       <ul>
+        <li>The extension now supports hiding specific jobs purely
+          within the extension, without telling LinkedIn you don't
+          want to see them. You should do this for jobs which are a
+          good fit for you but you don't want to see anymore, e.g.,
+          because you've already applied to them, so you don't
+          influence LinkedIn's algorithm not to show you similar jobs
+          in the future. To hide a job this way, click the funnel
+          button that the extension adds to jobs next to the eye with
+          the slash.</li>
         <li>LinkedIn has changed the structure of the recommended jobs
           / job search results pages for at least some users (they
           appear to be rolling out this change gradually and not
@@ -33,6 +42,14 @@ this program. If not, see <https://www.gnu.org/licenses/>.
           page format. If the extension suddenly stopped filtering
           jobs for you on some pages, this is probably the fix for
           that.</li>
+        <li>The extension now keeps paying attention to a job even
+          after you click its hide / unhide buttons. Previously once
+          you clicked hide and then unhide the extension would ignore
+          that job until you refreshed the page.</li>
+        <li>The delay between when you unhide a job and when it is
+          removed from the list of hidden jobs in the extension
+          options (if it's there) has been made considerably
+          shorter.</li>
         <li>A race condition which sometimes caused some jobs not to
           be filtered properly has been fixed.</li>
         <li>A workaround has been implemented for a problem which was

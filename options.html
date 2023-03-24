@@ -30,18 +30,18 @@ this program. If not, see <https://www.gnu.org/licenses/>.
     <table>
       <tr>
         <td>
-          <p>Regular expressions (one per line) to filter JOB
-            TITLES:</p>
+          <p>Regular expressions (one per line) to tell LinkedIn to
+            filter based on JOB TITLES:</p>
           <textarea id="titles" rows="10" cols="40"></textarea>
         </td>
         <td>
-          <p>Regular expressions to filter COMPANY NAMES:</p>
+          <p>...based on COMPANY NAMES:</p>
           <textarea id="companies" rows="10" cols="40"></textarea>
         </td>
       </tr>
       <tr>
         <td>
-          <p>Regular expressions to filter LOCATIONS:</p>
+          <p>...based on LOCATIONS:</p>
           <textarea id="locations" rows="10" cols="40"></textarea>
         </td>
       </tr>
@@ -49,7 +49,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
         <td colspan=2>
           <p>Specific jobs to filter, specified as
             &ldquo;<em>title</em> // <em>company</em>
-            // <em>location</em>&rdquo;:</p>
+            // <em>location</em>&rdquo; (add &ldquo;// private&rdquo;
+            at the end if the job should be hidden without telling
+            LinkedIn to filter based on that):</p>
           <textarea id="jobs" rows="10" cols="100"></textarea>
         </td>
       </tr>

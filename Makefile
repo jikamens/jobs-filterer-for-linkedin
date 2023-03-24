@@ -8,15 +8,18 @@ NAME=LinkedInJobsFilterer
 #
 #PRIVATE_KEY=key.pem
 GEN_JS_FILES=$(patsubst %.in,%,$(wildcard *.js.in)) button.js
-TEST_FILES=$(filter-out utils.js,$(wildcard *.js)) $(GEN_JS_FILES) \
+TEST_FILES=$(filter-out utils.js button.js tests.js,$(wildcard *.js)) \
 	$(wildcard *.html) manifest.json options.html \
 	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
 SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))
 ESLINT=node_modules/.bin/eslint
 
-all: $(NAME).zip $(NAME)-test.zip $(GEN_JS_FILES)
+all: $(GEN_JS_FILES) $(NAME).zip $(NAME)-test.zip
 
 $(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
+	@if grep 'utils\.debugging.*true' $(SHIP_FILES); then \
+	    echo "Can't ship with debugging enabled" 1>&2; false; \
+	else true; fi
 	rm -f build/$@.tmp
 	cd build && zip -r $@.tmp $(SHIP_FILES)
 	mv -f build/$@.tmp $@
@@ -36,7 +39,7 @@ build/%: %
 	@mkdir -p $(dir $@)
 	cp -f $< $@
 
-lint: $(ESLINT)
+lint: $(ESLINT) $(GEN_JS_FILES)
 	$(ESLINT) .
 	flake8 run-tests.py
 

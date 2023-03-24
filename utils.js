@@ -16,6 +16,12 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 var utils = {
     perItemLimit: 8192,
+    debugging: false,
+
+    debug: function(...args) {
+        if (utils.debug)
+            console.log.apply(null, ["LIJF"].concat(args));
+    },
 
     valuesAreEqual: function(value1, value2) {
         if (Array.isArray(value1)) {
@@ -71,4 +77,27 @@ var utils = {
             items = items.concat(options[`${name}${i}`])
         return items;
     },
+
+    id: undefined,
 };
+
+// Borrowed from https://stackoverflow.com/a/1997811/937306
+(function() {
+    if ( typeof utils.id != "undefined" ) return;
+
+    var _id = 0;
+
+    utils.id = function(o) {
+        if ( typeof o.__uniqueid != "undefined" ) {
+            return o.__uniqueid;
+        }
+
+        Object.defineProperty(o, "__uniqueid", {
+            value: `id${++_id}`,
+            enumerable: false,
+            writable: false
+        });
+
+        return o.__uniqueid;
+    };
+})();

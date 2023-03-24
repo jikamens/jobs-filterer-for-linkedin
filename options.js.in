@@ -55,15 +55,25 @@ function parseJobFilters(specStrings) {
             error(`Too few fields in "${specString}"`);
             return false;
         }
-        if (specArray.length > 3) {
+        if (specArray.length > 4) {
             error(`Too many fields in "${specString}"`);
             return false;
         }
-        specs.push({
+        var spec = {
             title: specArray[0],
             company: specArray[1],
             location: specArray[2]
-        });
+        };
+        if (specArray.length == 4 && specArray[3]) {
+            var options = specArray[3];
+            if (options != "private") {  // currently the only supported option
+                error(`Unrecognized job filter options "${options}"`);
+                return false;
+            }
+            // 1 instead of true because shorter stringificationx
+            spec.private = 1;  
+        }
+        specs.push(spec);
     }
     return specs;
 }
@@ -160,7 +170,13 @@ function setTextArea(id, regexps) {
 
 function populateJobsArea(filters) {
     if (! filters) return;
-    filters = filters.map(f => `${f.title} // ${f.company} // ${f.location}`)
+    filters = filters.map(f => {
+        var filter = `${f.title} // ${f.company} // ${f.location}`;
+        if (f.private) {
+            filter += " // private";
+        }
+        return filter;
+    });
     document.getElementById("jobs").value = filters.join("\n") +
         (filters.length ? "\n" : "");
     

@@ -21,21 +21,45 @@ const companyClasses = ["job-card-container__primary-description",
 const titleClasses = ["job-card-list__title"];
 const locationClasses = ["job-card-container__metadata-item"];
 const workplaceClasses = ["job-card-container__metadata-item--workplace-type"]
-
+const privateButtonClass = "lijfhidebutton"
 var titleRegexps, companyRegexps, locationRegexps, jobFilters, hideJobs;
 
+function getButtonElement() {
+    utils.debug("getButtonElement");
+    var button = document.createElement("button");
+    button.setAttribute("class", privateButtonClass);
+    button.setAttribute("style", "background-color: #777;");
+    var image = document.createElement("img");
+    image.setAttribute("src", buttonIconURL);
+    image.setAttribute("title", "Hide without telling LinkedIn");
+    button.appendChild(image);
+    return button;
+}
+
+function findPrivateButton(elt) {
+    utils.debug(`findPrivateButton(${utils.id(elt)})`);
+    var elts = elt.querySelectorAll(`.${privateButtonClass}`);
+    if (elts.length) {
+        return elts[0];
+    }
+    return undefined;
+}
+
 function findDismissButton(elt) {
+    utils.debug(`findDismissButton(${utils.id(elt)})`);
     var elts = elt.getElementsByTagName("button");
-    for (elt of elts) {
-        var label = elt.getAttribute("aria-label");
+    for (var button of elts) {
+        var label = button.getAttribute("aria-label");
         if (label && (label.includes("Hide") || label.includes("Dismiss") ||
-                      /^Mark .* with Not for me/.test(label)))
-            return elt;
+                      /^Mark .* with Not for me/.test(label))) {
+            return button;
+        }
     }
     return null;
 }
 
 function findUnhideButton(elt) {
+    utils.debug(`findUnhideButton(${utils.id(elt)})`);
     var elts = elt.getElementsByTagName("button");
     for (elt of elts)
         if (elt.innerText == "Undo")
@@ -44,6 +68,7 @@ function findUnhideButton(elt) {
 }
 
 function getLocation(elt) {
+    utils.debug(`getLocation(${utils.id(elt)})`);
     var location = getClassValue(locationClasses, elt)
     if (! location)
         return false;
@@ -54,6 +79,7 @@ function getLocation(elt) {
 }
 
 function getJobSpec(elt) {
+    utils.debug(`getJobspec(${utils.id(elt)})`);
     var spec = {
         title: getClassValue(titleClasses, elt),
         company: getClassValue(companyClasses, elt),
@@ -64,48 +90,413 @@ function getJobSpec(elt) {
     return spec;
 }
 
-function filterOneJob(elt) {
-    var hideButton = findDismissButton(elt);
-    if (hideButton && ! elt.getAttribute("jobsFiltererFiltered")) {
-        elt.setAttribute("jobsFiltererFiltered", true);
-        var jobSpec = getJobSpec(elt);
-        if (! jobSpec) return;
-        if ((matches(jobSpec.title, titleRegexps) ||
-             matches(jobSpec.company, companyRegexps) ||
-             matches(jobSpec.location, locationRegexps) ||
-             jobMatches(jobSpec))) {
-            hideButton.click();
-            if (hideJobs)
-                elt.hidden = true;
+/*
+  State configurations:
+  * initial
+    * undetermined card visibility
+    * undetermined job visibility
+    * undetermined private hide button with listener
+    * undetermined listener on LinkedIn hide button
+    * undetermined undo button listener
+  * filtering:
+    * undetermined card visibility
+    * undetermined job visibility
+    * undetermined private hide button with listener
+    * undetermined listener on LinkedIn hide button
+    * undetermined undo button listener
+  * visible-pending:
+    * undetermined card visibility
+    * undetermined job visibility
+    * undetermined private hide button with listener
+    * undetermined listener on LinkedIn hide button
+    * undetermined undo button listener
+  * visible
+    * card is visible
+    * job is visible 
+    * private hide button with listener
+    * listener on LinkedIn hide button
+    * no undo button listener
+  * private-hidden
+    * card is hidden
+    * job is visible on hidden card
+    * no private hide button / listener
+    * no listener on LinkedIn hide button
+    * no listener on undo button
+  * linkedin-hidden-pending
+    * undetermined card visibility
+    * undetermined job visibility
+    * undetermined hide button / listener
+    * undetermined on LinkedIn hide button
+    * undetermined listener on undo button
+  * linkedin-hidden
+    * card is visible
+    * job is not visible
+    * no private hide button / listener
+    * no listener on LinkedIn hide button
+    * listener on undo button
+  * linkedin-hidden-hidejobs
+    * card is hidden
+    * job is not visible on hidden card
+    * no private hide button / listener
+    * no listener on LinkedIn hide button
+    * no listener on undo button
+  State transitions:
+  initial:
+  * to filtering if jobSpec and dismiss button available
+  filtering:
+  * to visible-pending if no match and jobSpec and dismiss button available
+  * to private-hidden if private hide match
+  * to linkedin-hidden-pending if non-private hide match and not hideJobs
+    * first click LinkedIn dismiss button
+  * to linkedin-hidden-hidejobs if non-private hide match and hideJobs
+    * first click LinkedIn dismiss button
+  visible-pending:
+  * to visible when dismiss button and job spec become available
+  * remove job from job hide list if it's there
+  visible:
+  * to private-hidden if user clicks private hide button
+    * add private hide to options
+  * to linkedin-hidden-pending if user clicks LinkedIn hide button and not
+    hideJobs
+    * add non-private hide to options
+  * to linkedin-hidden-hidejobs if user clicks LinkedIn hide button and hideJobs
+    * add non-private hide to options
+  private-hidden:
+    None.
+  linkedin-hidden-pending:
+  * to linkedin-hidden when undo button becomes available
+  linkedin-hidden:
+  * to visible-pending if user clicks undo button
+    * remove hide from options
+  linkedin-hidden-hidejobs:
+    None.
+*/
+
+/*
+  Annoyingly, LinkedIn sometimes replaces a node when switching from
+  dismissed to not dismissed or vice versa. Wen need to keep an
+  internal cache to try to overcome these node changes.
+*/
+
+var cardCache = [];
+
+function cardCacheMark() {
+    utils.debug("cardCacheMark()");
+    for (var i in cardCache)
+        cardCache[i].mark = 1;
+}
+
+function cardCacheCollect() {
+    utils.debug("cardCacheCollect()");
+    for (var i = cardCache.length - 1; i >= 0; i--)
+        if (cardCache[i].mark)
+            cardCache.splice(i, 1);
+}
+
+function cardCacheSet(elt, state, jobSpec) {
+    utils.debug(`cardCacheSet(${utils.id(elt)}, ${state}, ` +
+                `${JSON.stringify(jobSpec)})`);
+    var obj;
+    for (obj of cardCache)
+        if (obj.elt == elt) {
+            delete obj.mark;
+            obj.state = state;
+            if (! obj.jobSpec)
+                obj.jobSpec = jobSpec;
             return;
         }
-        var hideListener;
-        hideListener = (event) => {
-            event.currentTarget.removeEventListener("click", hideListener);
-            hideJob(jobSpec, elt);
-        };
-        hideButton.addEventListener("click", hideListener);
+    if (jobSpec)
+        for (obj of cardCache)
+            if (utils.valuesAreEqual(obj.jobSpec, jobSpec)) {
+                delete obj.mark;
+                obj.elt = elt;
+                obj.state = state;
+                return;
+            }
+    obj = {elt: elt, jobSpec: jobSpec, state: state};
+    cardCache.push(obj);
+}
+
+function cardCacheGet(elt, jobSpec) {
+    utils.debug(`cardCacheGet(${utils.id(elt)}, ${JSON.stringify(jobSpec)})`);
+    var obj;
+    for (obj of cardCache)
+        if (obj.elt == elt) {
+            delete obj.mark;
+            return obj.state;
+        }
+    if (jobSpec) {
+        for (obj of cardCache)
+            if (obj.jobSpec && utils.valuesAreEqual(obj.jobSpec, jobSpec)) {
+                delete obj.mark;
+                obj.elt = elt;
+                return obj.state;
+            }
     }
-    var unhideButton = findUnhideButton(elt);
-    if (unhideButton && ! elt.getAttribute("jobsFiltererUnfiltered")) {
-        elt.setAttribute("jobsFiltererUnfiltered", true);
-        var unhideListener;
-        unhideListener = (event) => {
-            event.currentTarget.removeEventListener("click", unhideListener);
-            // There is a delay here to give LinkedIn time to repopulate the
-            // job data so that we can find it when trying to unhide the job.
-            setInterval(() => { unhideJob(elt); }, 2000);
-        };
-        unhideButton.addEventListener("click", unhideListener);
+    return undefined;
+}            
+
+function getState(elt, jobSpec) {
+    utils.debug(`getState(${utils.id(elt)}, ${JSON.stringify(jobSpec)})`);
+    var attr = elt.getAttribute("lijfState");
+    var cache = cardCacheGet(elt, jobSpec);
+    var retval = attr || cache;
+    return retval;
+}
+
+function setState(elt, jobSpec, state) {
+    utils.debug(`setState(${utils.id(elt)}, ${JSON.stringify(jobSpec)}, ` +
+                `${state})`);
+    cardCacheSet(elt, jobSpec, state);
+    elt.setAttribute("lijfState", state);
+}
+
+function configureState(elt, jobSpec, state) {
+    utils.debug(`configureState(${utils.id(elt)}, ` +
+                `${JSON.stringify(jobSpec)}, ${state})`);
+    var jobVisible;
+    var cardVisible, privateButton, linkedinListener, undoListener;
+    if (state == "initial") {
+        cardVisible = undefined;
+        jobVisible = undefined;
+        privateButton = undefined;
+        linkedinListener = undefined;
+        undoListener = undefined;
+    }
+    else if (state == "filtering") {
+        cardVisible = undefined;
+        jobVisible = undefined;
+        privateButton = undefined;
+        linkedinListener = undefined;
+        undoListener = undefined;
+    }
+    else if (state == "visible-pending") {
+        cardVisible = undefined;
+        jobVisible = undefined;
+        privateButton = undefined;
+        linkedinListener = undefined;
+        undoListener = undefined;
+    }
+    else if (state == "visible") {
+        cardVisible = true;
+        jobVisible = true;
+        privateButton = true;
+        linkedinListener = true;
+        undoListener = false;
+    }
+    else if (state == "private-hidden") {
+        cardVisible = false;
+        jobVisible = true;
+        privateButton = false;
+        linkedinListener = false;
+        undoListener = false;
+    }
+    else if (state == "linkedin-hidden-pending") {
+        cardVisible = undefined;
+        jobVisible = undefined;
+        privateButton = undefined;
+        linkedinListener = undefined;
+        undoListener = undefined;
+    }
+    else if (state == "linkedin-hidden") {
+        cardVisible = true;
+        jobVisible = false;
+        privateButton = false;
+        linkedinListener = false;
+        undoListener = true;
+    }
+    else if (state == "linkedin-hidden-hidejobs") {
+        cardVisible = false;
+        // eslint-disable-next-line no-unused-vars
+        jobVisible = false;
+        privateButton = false;
+        linkedinListener = false;
+        undoListener = false;
+    }
+    else {
+        throw `Unknown state ${state}`;
+    }
+    setCardVisible(elt, jobSpec, cardVisible);
+    // LinkedIn handles job visibility, we don't touch it.
+    setPrivateButton(elt, jobSpec, privateButton);
+    setLinkedinListener(elt, jobSpec, linkedinListener);
+    setUndoListener(elt, jobSpec, undoListener);
+    setState(elt, jobSpec, state);
+    return state;
+}
+
+function setCardVisible(elt, jobSpec, visible) {
+    utils.debug(`setCardVisible(${utils.id(elt)}, ` +
+                `${JSON.stringify(jobSpec)}, ${visible})`);
+    if (visible == undefined)
+        return;
+    elt.hidden = !visible;
+}
+
+function setPrivateButton(elt, jobSpec, wanted) {
+    utils.debug(`setPrivateButton(${utils.id(elt)}, ` +
+                `${JSON.stringify(jobSpec)}, ${wanted})`);
+    if (wanted == undefined)
+        return;
+    var oldButton, button, listener;
+    oldButton = elt.lijfPrivateButton || undefined;
+    if (oldButton) {
+        listener = oldButton[1]
+        oldButton = oldButton[0]
+    }
+    button = findPrivateButton(elt) || undefined;
+    if (! wanted || (oldButton && oldButton != button)) {
+        if (oldButton) {
+            if (oldButton != button)
+                console.log(`setPrivateButton: mismatch ` +
+                            `oldButton=${oldButton} vs button=${button}`);
+            oldButton.removeEventListener("click", listener);
+            delete elt.lijfPrivateButton;
+            oldButton = undefined;
+        }
+        if (button)
+            button.remove();
+    }
+
+    if (! wanted)
+        return;
+
+    if (oldButton)
+        return;
+
+    button = getButtonElement();
+    var reference = findDismissButton(elt);
+    var parent = reference.parentNode;
+    parent.insertBefore(button, reference.nextSibling);
+    listener = (event) => {
+        hideJob(jobSpec, true);
+        event.stopPropagation();
+        configureState(elt, jobSpec, "private-hidden");
+    };
+    button.addEventListener("click", listener);
+    elt.lijfPrivateButton = [button, listener];
+}
+
+function setLinkedinListener(elt, jobSpec, wanted) {
+    utils.debug(`setLinkedinListener(${utils.id(elt)}, ` +
+                `${JSON.stringify(jobSpec)}, ${wanted})`);
+    setListener(elt, jobSpec, wanted, "lijfDismissButton", findDismissButton,
+                () => {
+                    hideJob(jobSpec);
+                    configureState(elt, jobSpec, hideJobs ?
+                                   "linkedin-hidden-hidejobs" :
+                                   "linkedin-hidden-pending");
+                });
+}
+
+function setUndoListener(elt, jobSpec, wanted) {
+    utils.debug(`setUndoListener(${utils.id(elt)}, ` +
+                `${JSON.stringify(jobSpec)}, ${wanted})`);
+    setListener(elt, jobSpec, wanted, "lijfUndoButton", findUnhideButton,
+                () => configureState(elt, jobSpec, "visible-pending"));
+}
+
+function setListener(elt, jobSpec, wanted, property, finder, listener) {
+    utils.debug(`setListener(${utils.id(elt)}, ${JSON.stringify(jobSpec)}, `+
+                `${wanted}, ${property}, [finder], [listener])`);
+    if (wanted == undefined)
+        return;
+    var oldButton, oldListener, button;
+    oldButton = elt[property] || undefined;
+    if (oldButton) {
+        oldListener = oldButton[1]
+        oldButton = oldButton[0]
+    }
+    button = finder(elt) || undefined;
+    if (! wanted || (oldButton && oldButton != button)) {
+        if (oldButton) {
+            if (oldButton != button)
+                console.log(`setListener: mismatch ` +
+                            `oldButton=${oldButton} vs button=${button}`);
+            oldButton.removeEventListener("click", oldListener);
+            delete elt[property];
+            oldButton = undefined;
+        }
+    }
+
+    if (! wanted)
+        return;
+
+    if (oldButton)
+        return;
+
+    button.addEventListener("click", listener);
+    elt[property] = [button, listener];
+}
+
+function filterOneJob(elt) {
+    utils.debug(`filterOneJob(${utils.id(elt)})`);
+    var jobSpec = getJobSpec(elt);
+    var state = getState(elt, jobSpec);
+    var button;
+
+    if (! state) {
+        /*
+          We don't call configureState here because we don't want to put an
+          "initial" state into the cache in case when we finally get the
+          jobSpec it turns out this is a card LinkedIn replaced and we
+          actually know what its state is.
+        */
+        button = findDismissButton(elt);
+        if (! (jobSpec && button))
+            return;
+        state = configureState(elt, jobSpec, "filtering");
+        // fall through
+    }
+
+    if (state == "filtering") {
+        var result = (matches(jobSpec.title, titleRegexps) ||
+                      matches(jobSpec.company, companyRegexps) ||
+                      matches(jobSpec.location, locationRegexps) ||
+                      jobMatches(jobSpec));
+        if (! result) {
+            state = configureState(elt, jobSpec, "visible-pending");
+            // fall through
+        }
+        else {
+            if (result == "private") {
+                state = configureState(elt, jobSpec, "private-hidden")
+                return;
+            }
+            findDismissButton(elt).click();
+            state = configureState(elt, jobSpec, hideJobs ?
+                                   "linkedin-hidden-hidejobs" :
+                                   "linkedin-hidden-pending");
+            return;
+        }
+    }
+    
+    if (state == "visible-pending") {
+        button = findDismissButton(elt);
+        if (! (jobSpec && button))  // not ready yet
+            return;
+        unhideJob(elt, jobSpec);
+        state = configureState(elt, jobSpec, "visible");
+        return;
+    }
+
+    if (state == "linkedin-hidden-pending") {
+        button = findUnhideButton(elt)
+        if (! button)
+            return;
+        state = configureState(elt, jobSpec, "linkedin-hidden");
+        return;
     }
 }
 
 function matches(fieldValue, regexps) {
+    utils.debug(`matches(${fieldValue}, ${regexps})`);
     if (! fieldValue) return false;
     return regexps.some(r => r.test(fieldValue));
 }
 
 function getClassValue(classes, elt) {
+    utils.debug(`getClassValue(${classes}, ${utils.id(elt)})`);
     var selector = classes.map(c => `.${c}`).join(", ");
     var elts = elt.querySelectorAll(selector);
     if (elts.length == 0) return false;
@@ -113,13 +504,19 @@ function getClassValue(classes, elt) {
 }
 
 function jobMatches(jobSpec) {
-    return jobFilters.some(f => utils.valuesAreEqual(f, jobSpec));
+    utils.debug(`jobMatches(${JSON.stringify(jobSpec)})`);
+    for (var filter of jobFilters) {
+        if (filter.title != jobSpec.title ||
+            filter.company != jobSpec.company ||
+            filter.location != jobSpec.location)
+            continue;
+        return filter.private ? "private" : "linkedin";
+    }
+    return false;
 }
 
-function hideJob(jobSpec) {
-    var title = jobSpec.title;
-    var company = jobSpec.company;
-    var location = jobSpec.location;
+function hideJob(jobSpec, isPrivate) {
+    utils.debug(`hideJob(${JSON.stringify(jobSpec)}, ${isPrivate})`);
     // Don't list a job explicitly if it's already filtered by the regular
     // expressions, presumably because the user just edited them to include it,
     // or if it's already listed. This could happen if user hides a job and then
@@ -127,20 +524,24 @@ function hideJob(jobSpec) {
     // generating an artificial click event which causes this function to be
     // called. (This shouldn't happen anymore with recent code improvements but
     // I'm leaving this in as a precautionary measure.)
-    if (matches(title, titleRegexps) ||
-        matches(company, companyRegexps) ||
-        matches(location, locationRegexps) ||
+    if (matches(jobSpec.title, titleRegexps) ||
+        matches(jobSpec.company, companyRegexps) ||
+        matches(jobSpec.location, locationRegexps) ||
         jobMatches(jobSpec))
         return;
+    if (isPrivate) {
+        jobSpec = structuredClone(jobSpec);
+        // 1 instead of true because shorter stringification
+        jobSpec.private = 1;
+    }
     jobFilters.unshift(jobSpec);
     utils.saveListToStorage("jobFilters", jobFilters).then();
 }
 
-function unhideJob(elt) {
+function unhideJob(elt, jobSpec) {
+    utils.debug(`unhideJob(${utils.id(elt)}, ${JSON.stringify(jobSpec)})`);
     // Find the job details, check if they're in jobFilters, and remove them
     // if so.
-    var jobSpec = getJobSpec(elt);
-    if (! jobSpec) return;
     var changed = false;
     for (var i = jobFilters.length - 1; i >= 0; i--)
         if (utils.valuesAreEqual(jobFilters[i], jobSpec)) {
@@ -149,9 +550,17 @@ function unhideJob(elt) {
         }
     if (changed)
         utils.saveListToStorage("jobFilters", jobFilters).then();
+    return changed;
 }
 
+var filterTimeout;
+
 function filterEverything() {
+    utils.debug("filterEverything()");
+    cardCacheMark();
+    if (filterTimeout)
+        clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(cardCacheCollect, 5000);
     var elts = document.querySelectorAll(
         cardClasses.map(c => `.${c}`).join(", "));
     for (var elt of elts) {
@@ -160,6 +569,7 @@ function filterEverything() {
 }
 
 async function loadOptions() {
+    utils.debug("loadOptions()");
     titleRegexps = compileRegexps(
         await utils.readListFromStorage("titleRegexps"));
     companyRegexps = compileRegexps(
@@ -172,6 +582,7 @@ async function loadOptions() {
 }
 
 function compileRegexps(regexps) {
+    utils.debug(`compileRegexps(${regexps})`);
     if (! regexps) return [];
     var compiled = [];
     for (var regexp of regexps) {
@@ -190,6 +601,7 @@ function compileRegexps(regexps) {
 var topObserver = null;
 
 async function createTopObserver() {
+    utils.debug("createTopObserver()");
     var config = {childList: true, subtree: true};
     // eslint-disable-next-line no-unused-vars
     var callback = (mutationList, observer) => {
@@ -197,6 +609,7 @@ async function createTopObserver() {
     };
     topObserver = new MutationObserver(callback);
     topObserver.observe(document.body, config);
+    filterEverything();
 }
 
 loadOptions()

@@ -21,11 +21,15 @@ company_selector = (".job-card-container__primary-description, "
 location_selector = ".job-card-container__metadata-item"
 workplace_selector = ".job-card-container__metadata-item--workplace-type"
 private_hide_selector = ".lijfhidebutton"
+show_you_fewer = "Got it. We’ll show you fewer"
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Test LinkedIn Jobs Filterer")
     parser.add_argument("--headless", action="store_true", default=False)
+    parser.add_argument("--transient", action="store_true", default=False,
+                        help='Use transient user data directory (uses '
+                        '".chrome" in current directory by default)')
     return parser.parse_args()
 
 
@@ -39,6 +43,8 @@ def main():
         # Needs to be big enough to prevent the Messaging banner from obscuring
         # the first listed job even when Messaging is hidden.
         options.add_argument("window-size=1280,1024")
+        if not args.transient:
+            user_data_directory = ".chrome"
         options.add_argument(f"user-data-dir={user_data_directory}")
         options.add_extension("LinkedInJobsFilterer-test.zip")
         driver = webdriver.Chrome(options=options)
@@ -100,7 +106,10 @@ def run_tests(config, driver):
         })();
         return await tests.runTests();
     """
-    test_result = driver.execute_script(test_load_script)
+    try:
+        test_result = driver.execute_script(test_load_script)
+    except Exception:
+        test_result = "exception"
     if test_result != "success":
         print("JavaScript tests failed")
         pdb.set_trace()
@@ -108,16 +117,13 @@ def run_tests(config, driver):
     # Log into LinkedIn
     driver.switch_to.new_window("tab")
     linkedin_window_handle = driver.current_window_handle
-    driver.get("https://www.linkedin.com/login")
-    driver.find_element(By.ID, "username").send_keys(
-        config["linkedin_username"])
-    driver.find_element(By.ID, "password").send_keys(
-        config["linkedin_password"])
-    driver.find_element(By.XPATH, "//*[@aria-label='Sign in']").click()
+    driver.get("https://www.linkedin.com/")
 
     state = None
     while state != "homepage":
         (state, elt) = wait_for(
+            lambda: ("login", driver.find_element(
+                By.ID, "password")),
             lambda: ("2fa", driver.find_element(
                 By.ID, "input__phone_verification_pin")),
             lambda: ("captcha", driver.find_element(
@@ -127,7 +133,13 @@ def run_tests(config, driver):
             lambda: ("homepage", driver.find_element(
                 By.PARTIAL_LINK_TEXT, "Notifications"))
         )
-        if state == "2fa":
+        if state == "login":
+            driver.find_element(By.ID, "username").send_keys(
+                config["linkedin_username"])
+            driver.find_element(By.ID, "password").send_keys(
+                config["linkedin_password"])
+            driver.find_element(By.XPATH, "//*[@aria-label='Sign in']").click()
+        elif state == "2fa":
             mfa_code = input("Enter MFA code: ")
             elt.send_keys(mfa_code)
             driver.find_element(By.ID, "two-step-submit-button").click()
@@ -194,7 +206,7 @@ def test_job_on_page(driver, url,
             titles = new_titles
             start = time.time()
 
-    first_job = wait_for(lambda: find_first_job(driver))
+    ordinal, first_job = wait_for(lambda: find_first_active_job(driver))
     job_title = wait_for(lambda: first_job.find_elements(
         By.CSS_SELECTOR, title_selector))[0].text
     job_company = wait_for(lambda: first_job.find_elements(
@@ -212,17 +224,31 @@ def test_job_on_page(driver, url,
 
     # Can we find and unhide the same job?
     driver.switch_to.window(linkedin_window_handle)
-    unhide_button = wait_for(lambda: find_unhide_button(driver))
-    unhide_button.click()
+    first_job = wait_for(lambda: find_job(driver, ordinal))
+    unhide_result = wait_for(
+        lambda: find_unhide_button(first_job),
+        lambda: ("permanent" if show_you_fewer
+                 in first_job.get_attribute("innerText") else False))
+    if unhide_result != "permanent":
+        unhide_result.click()
 
-    # Does the unhidden job get removed from the options page?
-    driver.switch_to.window(options_window_handle)
-    wait_for(lambda: driver.find_element(By.ID, "jobs").
-             get_attribute("value") == orig_job_text)
+        # Does the unhidden job get removed from the options page?
+        driver.switch_to.window(options_window_handle)
+        wait_for(lambda: driver.find_element(By.ID, "jobs").
+                 get_attribute("value") == orig_job_text)
+    else:
+        driver.switch_to.window(options_window_handle)
+        orig_job_text = (driver.find_element(By.ID, "jobs").
+                         get_attribute("value"))
 
     # Can we find and click the private hide button?
     driver.switch_to.window(linkedin_window_handle)
-    first_job = wait_for(lambda: find_first_job(driver))
+    ordinal, first_job = wait_for(lambda: find_first_active_job(driver))
+    job_title = wait_for(lambda: first_job.find_elements(
+        By.CSS_SELECTOR, title_selector))[0].text
+    job_company = wait_for(lambda: first_job.find_elements(
+        By.CSS_SELECTOR, company_selector))[0].text
+    job_location = get_location(first_job)
     hide_button = wait_for(lambda: find_private_hide_button(driver, first_job))
     hide_button.click()
 
@@ -266,11 +292,23 @@ def wait_for(*funcs):
     pdb.set_trace()
 
 
-def find_first_job(driver):
+def find_first_active_job(driver):
+    ordinal = 1
     for elt in driver.find_elements(By.CSS_SELECTOR, job_selector):
         if elt.get_attribute("hidden"):
+            ordinal += 1
             continue
-        return elt
+        if show_you_fewer in elt.get_attribute("innerText"):
+            ordinal += 1
+            continue
+        return (ordinal, elt)
+
+
+def find_job(driver, ordinal):
+    for elt in driver.find_elements(By.CSS_SELECTOR, job_selector):
+        ordinal -= 1
+        if ordinal == 0:
+            return elt
     return None
 
 
@@ -280,7 +318,8 @@ def find_hide_button(driver, elt, hidden_ok=False):
     elts = elt.find_elements(By.TAG_NAME, "button")
     for elt in elts:
         label = elt.get_attribute("aria-label")
-        if label and ("Hide" in label or "Dismiss" in label):
+        if label and ("Hide" in label or "Dismiss" in label or
+                      re.match(r'^Mark .* with Not for me', label)):
             return elt
     return None
 
@@ -289,13 +328,8 @@ def find_private_hide_button(driver, elt):
     return elt.find_element(By.CSS_SELECTOR, private_hide_selector)
 
 
-def find_unhide_button(driver):
-    for job in driver.find_elements(By.CSS_SELECTOR, job_selector):
-        if job.get_attribute("lijfState") == "linkedin-hidden":
-            break
-    else:
-        return None
-    elts = job.find_elements(By.TAG_NAME, "button")
+def find_unhide_button(elt):
+    elts = elt.find_elements(By.TAG_NAME, "button")
     for elt in elts:
         if elt.text == "Undo":
             return elt

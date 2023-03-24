@@ -8,7 +8,8 @@ NAME=LinkedInJobsFilterer
 #
 #PRIVATE_KEY=key.pem
 GEN_JS_FILES=$(patsubst %.in,%,$(wildcard *.js.in)) button.js
-TEST_FILES=$(filter-out utils.js button.js tests.js,$(wildcard *.js)) \
+TEST_FILES=$(GEN_JS_FILES) \
+	$(filter-out utils.js button.js $(GEN_JS_FILES),$(wildcard *.js)) \
 	$(wildcard *.html) manifest.json options.html \
 	icons/16.png icons/48.png icons/128.png $(PRIVATE_KEY)
 SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))

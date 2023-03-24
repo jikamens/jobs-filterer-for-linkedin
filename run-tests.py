@@ -122,8 +122,7 @@ def run_tests(config, driver):
     state = None
     while state != "homepage":
         (state, elt) = wait_for(
-            lambda: ("login", driver.find_element(
-                By.ID, "password")),
+            lambda: ("login", find_password_field(driver)),
             lambda: ("2fa", driver.find_element(
                 By.ID, "input__phone_verification_pin")),
             lambda: ("captcha", driver.find_element(
@@ -134,11 +133,9 @@ def run_tests(config, driver):
                 By.PARTIAL_LINK_TEXT, "Notifications"))
         )
         if state == "login":
-            driver.find_element(By.ID, "username").send_keys(
-                config["linkedin_username"])
-            driver.find_element(By.ID, "password").send_keys(
-                config["linkedin_password"])
-            driver.find_element(By.XPATH, "//*[@aria-label='Sign in']").click()
+            find_username_field(driver).send_keys(config["linkedin_username"])
+            elt.send_keys(config["linkedin_password"])
+            find_login_button(driver).click()
         elif state == "2fa":
             mfa_code = input("Enter MFA code: ")
             elt.send_keys(mfa_code)
@@ -164,6 +161,28 @@ def run_tests(config, driver):
         driver.save_screenshot(fn)
         print(f"Element click intercepted, screenshot saved in {fn}")
         pdb.set_trace()
+
+
+def find_username_field(driver):
+    elts = driver.find_elements(By.ID, "username")
+    if elts:
+        return elts[0]
+    return driver.find_element(By.ID, "session_key")
+
+
+def find_password_field(driver):
+    elts = driver.find_elements(By.ID, "password")
+    if elts:
+        return elts[0]
+    return driver.find_element(By.ID, "session_password")
+
+
+def find_login_button(driver):
+    elts = driver.find_elements(By.XPATH, "//*[@aria-label='Sign in']")
+    if elts:
+        return elts[0]
+    return driver.find_element(By.XPATH,
+                               "//*[@data-id='sign-in-form__submit-btn']")
 
 
 def hide_messaging(driver):

@@ -35,8 +35,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
       quality of these lists of jobs by filtering out jobs you
       don&rsquo;t want to see based on either jobs whose
       &ldquo;don&rsquo;t show me this&rdquo; button you&rsquo;ve
-      clicked or on regular-expression matches on the job title,
-      company name, or location.</p>
+      clicked or on regular-expression (regexp) matches on the job
+      title, company name, or location.</p>
 
     <p>The simplest way to use this extension is to tell LinkedIn not
       to show you jobs by clicking on their buttons intended for that
@@ -68,13 +68,15 @@ this program. If not, see <https://www.gnu.org/licenses/>.
       but you'll never see it.</p>
 
     <p>In addition to filtering out specific jobs by clicking the
-      buttons, you can filter jobs by regular expression match. To do
-      that, enter the regular expressions you want to filter with, one
-      per line, in the text boxes above, then click Save. <em>Do not
-      enclose your regular expressions in slashes</em> like you would
-      if you were writing them in JavaScript.</p>
+      buttons, you can filter jobs by regexp match. To do
+      that, enter the regexp you want to filter with, one
+      per line, in the text boxes above, then click Save. You can
+      optionally enclose your regexp in slashes if you want to
+      specify the case-insensitive flag on it; in other words, the
+      regexp &ldquo;abc&rdquo; won't match &ldquo;Abc&rdquo;, but
+      &ldquo;/abc/i&rdquo; will.</p>
 
-    <p>Documenting how to write regular expressions is beyond the
+    <p>Documenting how to write regexps is beyond the
       scope of this help
       text; <a href="https://developer.mozilla.org/docs/Web/JavaScript/Guide/Regular_Expressions"
                target="_blank">here</a>

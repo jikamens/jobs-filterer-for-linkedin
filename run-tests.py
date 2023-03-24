@@ -30,6 +30,8 @@ def parse_args():
     parser.add_argument("--transient", action="store_true", default=False,
                         help='Use transient user data directory (uses '
                         '".chrome" in current directory by default)')
+    parser.add_argument("--local-only", action="store_true", default=False,
+                        help="Don't run tests that depend on LinkedIn")
     return parser.parse_args()
 
 
@@ -48,11 +50,11 @@ def main():
         options.add_argument(f"user-data-dir={user_data_directory}")
         options.add_extension("LinkedInJobsFilterer-test.zip")
         driver = webdriver.Chrome(options=options)
-        run_tests(config, driver)
+        run_tests(config, args, driver)
         driver.quit()
 
 
-def run_tests(config, driver):
+def run_tests(config, args, driver):
     # Did the changelog page load on install?
     start = time.time()
     while len(driver.window_handles) == 1 and time.time() - start < 2:
@@ -116,6 +118,9 @@ def run_tests(config, driver):
     if test_result != "success":
         print("JavaScript tests failed")
         pdb.set_trace()
+
+    if args.local_only:
+        return
 
     # Log into LinkedIn
     driver.switch_to.new_window("tab")

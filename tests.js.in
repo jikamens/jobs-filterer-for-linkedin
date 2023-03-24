@@ -48,8 +48,20 @@ async function testSave() {
     return utils.valuesAreEqual(data, result);
 }
 
+async function testRegexps() {
+    var regexps = utils.compileRegexps(["abc", "/abc/i"]);
+    var success = true;
+    success ||= regexps[0].exec("abc");
+    success ||= !regexps[0].exec("Abc");
+    success ||= !regexps[0].exec("def");
+    success ||= regexps[1].exec("abc");
+    success ||= regexps[1].exec("Abc");
+    success ||= !regexps[1].exec("def");
+    return success;
+}
+
 export async function runTests() {
-    for (var func of [testOldLoad, testNewLoad, testSave]) {
+    for (var func of [testOldLoad, testNewLoad, testSave, testRegexps]) {
         if (! await func())
             return "failure";
     }

@@ -570,32 +570,15 @@ function filterEverything() {
 
 async function loadOptions() {
     utils.debug("loadOptions()");
-    titleRegexps = compileRegexps(
+    titleRegexps = utils.compileRegexps(
         await utils.readListFromStorage("titleRegexps"));
-    companyRegexps = compileRegexps(
+    companyRegexps = utils.compileRegexps(
         await utils.readListFromStorage("companyRegexps"));
-    locationRegexps = compileRegexps(
+    locationRegexps = utils.compileRegexps(
         await utils.readListFromStorage("locationRegexps"));
     jobFilters = await utils.readListFromStorage("jobFilters");
     var options = await chrome.storage.sync.get(["hideJobs"]);
     hideJobs = options["hideJobs"];
-}
-
-function compileRegexps(regexps) {
-    utils.debug(`compileRegexps(${regexps})`);
-    if (! regexps) return [];
-    var compiled = [];
-    for (var regexp of regexps) {
-        try {
-            regexp = new RegExp(regexp);
-        }
-        catch (ex) {
-            console.log(ex.message);
-            continue;
-        }
-        compiled.push(regexp);
-    }
-    return compiled;
 }
 
 var topObserver = null;

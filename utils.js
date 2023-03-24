@@ -79,6 +79,34 @@ var utils = {
     },
 
     id: undefined,
+
+    regReg: /^\/(.*)\/([i]*)$/,
+
+    compileRegexps: function(regexps) {
+        utils.debug(`compileRegexps(${regexps})`);
+        if (! regexps) return [];
+        var compiled = [];
+        for (var regexp of regexps) {
+            var flags;
+            var match = utils.regReg.exec(regexp);
+            if (match) {
+                regexp = match[1];
+                flags = match[2];
+            }
+            else {
+                flags = "";
+            }
+            try {
+                regexp = new RegExp(regexp, flags);
+            }
+            catch (ex) {
+                console.log(ex.message);
+                continue;
+            }
+            compiled.push(regexp);
+        }
+        return compiled;
+    },
 };
 
 // Borrowed from https://stackoverflow.com/a/1997811/937306

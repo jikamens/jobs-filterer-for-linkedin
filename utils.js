@@ -19,7 +19,7 @@ var utils = {
     debugging: false,
 
     debug: function(...args) {
-        if (utils.debug)
+        if (utils.debugging)
             console.log.apply(null, ["LIJF"].concat(args));
     },
 

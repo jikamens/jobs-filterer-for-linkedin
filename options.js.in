@@ -27,6 +27,30 @@ function getTextArea(id) {
     return new_items;
 }
 
+function getTextAreas(id, results) {
+    var ids = {t: "titles", c: "companies", l: "locations"};
+    var elt = document.getElementById(id);
+    var items = elt.value.split("\n");
+    var diverted = false;
+    for (var item of items) {
+        var this_id, match;
+        item = item.trim();
+        if (item == "")
+            continue;
+        match = /^([tcl]):\s*(.*)/i.exec(item);
+        if (match) {
+            if (! match[2])
+                continue;
+            diverted = true;
+            this_id = ids[match[1].toLowerCase()];
+            results[this_id].unshift(match[2]);
+        }
+        else
+            results[id].push(item);
+    }
+    return diverted;
+}
+
 function escapeHTML(unsafeText) {
     let div = document.createElement('div');
     div.innerText = unsafeText;
@@ -84,17 +108,18 @@ function error(msg) {
         `<font color="red">${quoted}</font>`;
 }
 
-function saveOptions() {
+async function saveOptions() {
     var hide = document.getElementById("hideJobs").checked;
     var showChanges = document.getElementById("showChanges").checked;
-    var titles = getTextArea("titles");
-    var companies = getTextArea("companies");
-    var locations = getTextArea("locations");
+    var results = {titles: [], companies: [], locations: []};
     var jobs = getTextArea("jobs");
+    var diverted = getTextAreas("titles", results);
+    diverted = getTextAreas("companies", results) || diverted;
+    diverted = getTextAreas("locations", results) || diverted;
 
-    if (! (checkRegExps(titles) &&
-           checkRegExps(companies) &&
-           checkRegExps(locations))) {
+    if (! (checkRegExps(results["titles"]) &&
+           checkRegExps(results["companies"]) &&
+           checkRegExps(results["locations"]))) {
         return;
     }
 
@@ -107,15 +132,16 @@ function saveOptions() {
     var newOptions = {
         hideJobs: hide,
         showChanges: showChanges,
-        titleRegexps: titles,
-        companyRegexps: companies,
-        locationRegexps: locations,
+        titleRegexps: results["titles"],
+        companyRegexps: results["companies"],
+        locationRegexps: results["locations"],
         jobFilters: jobFilters
     };
 
-    getAllOptions().then((oldOptions) => {
-        saveChanges(oldOptions, newOptions).then();
-    });
+    var oldOptions = await getAllOptions();
+    await saveChanges(oldOptions, newOptions);
+    if (diverted)
+        await restoreOptions();
 }
 
 async function getAllOptions() {

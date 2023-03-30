@@ -1,7 +1,7 @@
 {
     "name": "LinkedIn Jobs Filterer",
     "description": "Filter jobs you don't want to see from LinkedIn search results and recommended jobs.",
-    "version": "0.7",
+    "version": "0.8",
     "manifest_version": 3,
     "permissions": ["storage"],
     "content_scripts": [

@@ -15,7 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
 const cardClasses = ["jobs-search-results__list-item",
-                     "jobs-job-board-list__item"];
+                     "jobs-job-board-list__item",
+                     "discovery-templates-entity-item"];
 const companyClasses = ["job-card-container__primary-description",
                         "job-card-container__company-name"];
 const titleClasses = ["job-card-list__title"];

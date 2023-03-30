@@ -14,7 +14,9 @@ import time
 import yaml
 
 config_file = "test-config.yml"
-job_selector = ".jobs-search-results__list-item, .jobs-job-board-list__item"
+job_selector = (".jobs-search-results__list-item, "
+                ".jobs-job-board-list__item, "
+                ".discovery-templates-entity-item")
 title_selector = ".job-card-list__title"
 company_selector = (".job-card-container__primary-description, "
                     ".job-card-container__company-name")

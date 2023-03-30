@@ -2,6 +2,7 @@
 *.zip
 button.js
 build
+classes.log
 content-script.js
 node_modules
 options.js

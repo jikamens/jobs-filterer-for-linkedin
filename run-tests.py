@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 import pdb
 import re
 from selenium import webdriver
@@ -24,6 +25,7 @@ location_selector = ".job-card-container__metadata-item"
 workplace_selector = ".job-card-container__metadata-item--workplace-type"
 private_hide_selector = ".lijfhidebutton"
 show_you_fewer = "Got it. We’ll show you fewer"
+class_logger = None
 
 
 def parse_args():
@@ -38,6 +40,14 @@ def parse_args():
 
 
 def main():
+    global class_logger
+    class_logger = logging.getLogger(__file__)
+    class_logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler("classes.log")
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+    class_logger.addHandler(handler)
+
     config = yaml.load(open(config_file), yaml.Loader)
     args = parse_args()
     with tempfile.TemporaryDirectory() as user_data_directory:
@@ -222,8 +232,8 @@ def test_job_on_page(driver, url,
     # We need to wait until we see the first job _title_ before we look for
     # the first _job_ because empty jobs show up temporarily on the page and
     # are then replaced by the real ones with contents (like job title).
-    titles = wait_for(lambda: driver.find_elements(
-        By.CSS_SELECTOR, title_selector))
+    titles = log_class(wait_for(lambda: driver.find_elements(
+        By.CSS_SELECTOR, title_selector)), is_list=True)
 
     # Wait for the page to "settle", i.e., wait until two seconds go by with
     # the set of job title elements not changing.
@@ -238,8 +248,8 @@ def test_job_on_page(driver, url,
     ordinal, first_job = wait_for(lambda: find_first_active_job(driver))
     job_title = wait_for(lambda: first_job.find_elements(
         By.CSS_SELECTOR, title_selector))[0].text
-    job_company = wait_for(lambda: first_job.find_elements(
-        By.CSS_SELECTOR, company_selector))[0].text
+    job_company = log_class(wait_for(lambda: first_job.find_elements(
+        By.CSS_SELECTOR, company_selector))[0]).text
     job_location = get_location(first_job)
 
     hide_button = wait_for(lambda: find_hide_button(driver, first_job))
@@ -297,9 +307,10 @@ def test_job_on_page(driver, url,
 
 
 def get_location(elt):
-    job_location = wait_for(lambda: elt.find_elements(
-        By.CSS_SELECTOR, location_selector))[0].text
-    workplaces = elt.find_elements(By.CSS_SELECTOR, workplace_selector)
+    job_location = log_class(wait_for(lambda: elt.find_elements(
+        By.CSS_SELECTOR, location_selector))[0]).text
+    workplaces = log_class(
+        elt.find_elements(By.CSS_SELECTOR, workplace_selector), is_list=True)
     if workplaces:
         job_location = f"{job_location} ({workplaces[0].text})"
     return job_location
@@ -324,7 +335,8 @@ def wait_for(*funcs):
 
 def find_first_active_job(driver):
     ordinal = 1
-    for elt in driver.find_elements(By.CSS_SELECTOR, job_selector):
+    for elt in log_class(driver.find_elements(By.CSS_SELECTOR, job_selector),
+                         is_list=True):
         if elt.get_attribute("hidden"):
             ordinal += 1
             continue
@@ -364,6 +376,14 @@ def find_unhide_button(elt):
         if elt.text == "Undo":
             return elt
     return None
+
+
+def log_class(elt, is_list=False):
+    if elt:
+        the_class = (elt[0] if is_list else elt).get_attribute("class")
+        the_class = re.sub(r'\s+', ' ', the_class).strip()
+        class_logger.info(the_class)
+    return elt
 
 
 if __name__ == "__main__":

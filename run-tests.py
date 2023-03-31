@@ -263,7 +263,7 @@ def test_job_on_page(driver, url,
 
     # Can we find and unhide the same job?
     driver.switch_to.window(linkedin_window_handle)
-    time.sleep(0.5)  # race condition, LinkedIn may not be done rearranging
+    time.sleep(1)  # race condition, LinkedIn may not be done rearranging
     first_job = wait_for(lambda: find_job(driver, ordinal))
     unhide_result = wait_for(
         lambda: find_unhide_button(first_job),

@@ -15,7 +15,7 @@ TEST_FILES=$(GEN_JS_FILES) \
 SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))
 ESLINT=node_modules/.bin/eslint
 
-all: $(GEN_JS_FILES) $(NAME).zip $(NAME)-test.zip $(NAME).xpi
+all: $(GEN_JS_FILES) $(NAME).zip $(NAME)-test.zip $(NAME).xpi $(NAME)-test.xpi
 
 $(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
 	@if grep 'utils\.debugging.*true' $(SHIP_FILES); then \
@@ -39,6 +39,11 @@ $(NAME).xpi: $(foreach f,$(SHIP_FILES),firefox/$(f))
 	else true; fi
 	rm -f firefox/$@.tmp
 	cd firefox && zip -r $@.tmp $(SHIP_FILES)
+	mv -f firefox/$@.tmp $@
+
+$(NAME)-test.xpi: $(foreach f,$(TEST_FILES),firefox/$(f))
+	rm -f firefox/$@.tmp
+	cd firefox && zip -r $@.tmp $(TEST_FILES)
 	mv -f firefox/$@.tmp $@
 
 $(NAME)-test.zip: $(foreach f,$(TEST_FILES),build/$(f))
@@ -78,6 +83,9 @@ lint: $(ESLINT) $(GEN_JS_FILES)
 
 test: test-config.yml $(NAME)-test.zip
 	./run-tests.py $(TEST_ARGS)
+
+test-firefox: test-config.yml $(NAME)-test.xpi
+	./run-tests.py --firefox $(TEST_ARGS)
 
 $(ESLINT):
 	npm install

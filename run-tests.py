@@ -136,7 +136,7 @@ def run_tests(config, args, driver):
              get_attribute("value") == "LocationRegexp\n")
     wait_for(lambda: driver.find_element(By.ID, "jobs").
              get_attribute("value") == "Title // Company // Location\n")
-    # Note that subsequent tests depend on "jobs" not being ampty.
+    # Note that subsequent tests depend on "jobs" not being empty.
     driver.close()
 
     # Run JavaScript tests

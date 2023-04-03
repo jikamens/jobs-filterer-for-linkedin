@@ -2,7 +2,7 @@
   "devDependencies": {
     "eslint": "^8.36.0"
   },
-  "dependencies": {
+  "devDependencies": {
     "web-ext": "^7.6.0"
   }
 }

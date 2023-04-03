@@ -1,11 +1,13 @@
 .chrome
 *.crx
 *.pem
+*.xpi
 *.zip
 button.js
 build
 classes.log
 content-script.js
+firefox
 node_modules
 options.js
 test-config.yml

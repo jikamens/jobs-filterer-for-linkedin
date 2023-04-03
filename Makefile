@@ -15,7 +15,7 @@ TEST_FILES=$(GEN_JS_FILES) \
 SHIP_FILES=$(filter-out tests.js,$(TEST_FILES))
 ESLINT=node_modules/.bin/eslint
 
-all: $(GEN_JS_FILES) $(NAME).zip $(NAME)-test.zip
+all: $(GEN_JS_FILES) $(NAME).zip $(NAME)-test.zip $(NAME).xpi
 
 $(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
 	@if grep 'utils\.debugging.*true' $(SHIP_FILES); then \
@@ -33,10 +33,33 @@ $(NAME).crx: $(foreach f,$(SHIP_FILES),build/$(f))
 	cd firefox && zip -r $@.tmp $(SHIP_FILES)
 	mv -f firefox/$@.tmp $@
 
+$(NAME).xpi: $(foreach f,$(SHIP_FILES),firefox/$(f))
+	@if grep 'utils\.debugging.*true' $(SHIP_FILES); then \
+	    echo "Can't ship with debugging enabled" 1>&2; false; \
+	else true; fi
+	rm -f firefox/$@.tmp
+	cd firefox && zip -r $@.tmp $(SHIP_FILES)
+	mv -f firefox/$@.tmp $@
+
 $(NAME)-test.zip: $(foreach f,$(TEST_FILES),build/$(f))
 	rm -f build/$@.tmp
 	cd build && zip -r $@.tmp $(TEST_FILES)
 	mv -f build/$@.tmp $@
+
+firefox/manifest.json: manifest.json Makefile
+	@mkdir -p firefox
+	rm -f $@.tmp
+	jq ".background.scripts = [.background.service_worker] | \
+            .browser_specific_settings.gecko.id = \"LinkedInJobsFilterer@kamens.us\" | \
+            .browser_specific_settings.gecko.strict_min_version = \"109.0\" | \
+	    .options_ui.page = \"options.html\" | \
+	    .options_ui.open_in_tab = true | \
+            del(.background.service_worker, .key, .options_page)" < $< > $@.tmp
+	mv $@.tmp $@
+
+firefox/%: %
+	@mkdir -p $(dir $@)
+	cp -f $< $@
 
 build/manifest.json: manifest.json
 	@mkdir -p build
@@ -59,7 +82,7 @@ $(ESLINT):
 	npm install
 
 clean:
-	rm -rf *.zip *.crx build $(GEN_JS_FILES)
+	rm -rf *.zip *.xpi *.crx build firefox $(GEN_JS_FILES)
 
 # "Why isn't utils.js a JavaScript module that's imported into the other files
 # that need its functions?" you ask? Because when it is, then whenever the

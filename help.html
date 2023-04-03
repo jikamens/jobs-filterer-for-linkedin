@@ -18,6 +18,18 @@ this program. If not, see <https://www.gnu.org/licenses/>.
   <head><title>LinkedIn Jobs Filterer Help</title></head>
   <body>
     <div style="font-size: 150%;">
+    <div id="firefox-permissions">
+      <h2>NOTE: Granting the extension permissions on Firefox</h2>
+
+      <p>This extension won't work on Firefox until you give it
+        permission to access the content of linkedin.com web pages
+        that you interact with. To do that, right-click (ctrl-click on
+        macOS) on the extension icon in the toolbar, select
+        &ldquo;Manage Extension&rdquo;, click
+        &ldquo;Permissions&rdquo;, and turn on the switch next to
+        &ldquo;Access your data for
+        https://www.linkedin.com&rdquo;.</p>
+    </div>
     <h2>What LinkedIn Jobs Filterer does and how to use it</h2>
 
     <p>(See extension changelog <a href="changes.html">here</a>.)</p>
@@ -123,4 +135,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
          target="_blank">here</a>.</p>
         </div>
   </body>
+  <script>
+    document.getElementById("firefox-permissions").hidden =
+    !navigator.userAgent.includes("Firefox");
+  </script>
+  
 </html>

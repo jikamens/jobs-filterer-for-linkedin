@@ -26,21 +26,30 @@ workplace_selector = ".job-card-container__metadata-item--workplace-type"
 private_hide_selector = ".lijfhidebutton"
 show_you_fewer = "Got it. We’ll show you fewer"
 class_logger = None
+url_prefix = None
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Test LinkedIn Jobs Filterer")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--chrome", dest="browser", action="store_const",
+                       const="chrome", default="chrome",
+                       help="Test in Chrome (Default)")
+    group.add_argument("--firefox", dest="browser", nargs='?', action="store",
+                       const="firefox", help="Test in Firefox (optionally "
+                       "specify path of firefox executable)")
     parser.add_argument("--headless", action="store_true", default=False)
     parser.add_argument("--transient", action="store_true", default=False,
-                        help='Use transient user data directory (uses '
-                        '".chrome" in current directory by default)')
+                        help='Use transient user data directory with Chrome '
+                        '(Firefox always uses transient directory) instead '
+                        'of ".chrome"')
     parser.add_argument("--local-only", action="store_true", default=False,
                         help="Don't run tests that depend on LinkedIn")
     return parser.parse_args()
 
 
 def main():
-    global class_logger
+    global class_logger, url_prefix
     class_logger = logging.getLogger(__file__)
     class_logger.setLevel(logging.DEBUG)
     handler = logging.FileHandler("classes.log")
@@ -51,19 +60,36 @@ def main():
     config = yaml.load(open(config_file), yaml.Loader)
     args = parse_args()
     with tempfile.TemporaryDirectory() as user_data_directory:
-        options = webdriver.ChromeOptions()
-        if args.headless:
-            options.add_argument("headless=new")
-        # Needs to be big enough to prevent the Messaging banner from obscuring
-        # the first listed job even when Messaging is hidden.
-        options.add_argument("window-size=1280,1024")
-        if not args.transient:
-            user_data_directory = ".chrome"
-        options.add_argument(f"user-data-dir={user_data_directory}")
-        options.add_extension("LinkedInJobsFilterer-test.zip")
-        driver = webdriver.Chrome(options=options)
-        run_tests(config, args, driver)
-        driver.quit()
+        if args.browser == "chrome":
+            url_prefix = "chrome-extension"
+            if not args.transient:
+                user_data_directory = ".chrome"
+            options = webdriver.ChromeOptions()
+            if args.headless:
+                options.add_argument("headless=new")
+            # Needs to be big enough to prevent the Messaging banner from
+            # obscuring the first listed job even when Messaging is hidden.
+            options.add_argument("window-size=1280,1024")
+            options.add_argument(f"user-data-dir={user_data_directory}")
+            options.add_extension("LinkedInJobsFilterer-test.zip")
+            driver = webdriver.Chrome(options=options)
+        else:
+            url_prefix = "moz-extension"
+            options = webdriver.FirefoxOptions()
+            if args.browser != "firefox":
+                options.binary_location = args.browser
+            options.set_preference("xpinstall.signatures.required", False)
+            if args.headless:
+                options.add_argument("headless")
+            options.add_argument("--width=1280")
+            options.add_argument("--height=1024")
+            driver = webdriver.Firefox(options=options)
+            driver.install_addon("LinkedInJobsFilterer-test.xpi")
+            input("Grant the extension access to linkedin.com and hit Enter: ")
+        try:
+            run_tests(config, args, driver)
+        finally:
+            driver.quit()
 
 
 def run_tests(config, args, driver):
@@ -75,16 +101,16 @@ def run_tests(config, args, driver):
 
     # Does the changelog page have expected content?
     assert "change history" in driver.page_source
-    match = re.match(r"chrome-extension://(.*)/changes\.html$",
+    match = re.match(r"(?:chrome|moz)-extension://(.*)/changes\.html$",
                      driver.current_url)
     extension_id = match[1]
 
     # Can we load the help page with expected content?
-    driver.get(f"chrome-extension://{extension_id}/help.html")
+    driver.get(f"{url_prefix}://{extension_id}/help.html")
     assert "Example workflow" in driver.page_source
 
     # Can we load the options page with expected content?
-    options_page = f"chrome-extension://{extension_id}/options.html"
+    options_page = f"{url_prefix}://{extension_id}/options.html"
     driver.get(options_page)
     driver.find_element(By.ID, "hideJobs")
     options_window_handle = driver.current_window_handle
@@ -116,17 +142,17 @@ def run_tests(config, args, driver):
     # Run JavaScript tests
     driver.switch_to.window(options_window_handle)
     test_load_script = """
-        var tests;
-        await (async () => {
-            const src = chrome.runtime.getURL("tests.js");
-            tests = await import(src);
-        })();
-        return await tests.runTests();
+        import(chrome.runtime.getURL('tests.js'))
+          .then((tests) => { return tests.runTests();})
+          .then((result) => { document.testResult = result; });
     """
-    try:
-        test_result = driver.execute_script(test_load_script)
-    except Exception:
-        test_result = "exception"
+    driver.execute_script(test_load_script)
+
+    test_result = wait_for(
+        lambda: driver.execute_script("return document.testResult"),
+        timeout=2
+    )
+
     if test_result != "success":
         print("JavaScript tests failed")
         pdb.set_trace()
@@ -316,11 +342,10 @@ def get_location(elt):
     return job_location
 
 
-def wait_for(*funcs):
+def wait_for(*funcs, timeout=10):
     sleep_for = 0.1
     start = time.time()
-    limit = 10
-    while time.time() - start < limit:
+    while time.time() - start < timeout:
         for func in funcs:
             try:
                 result = func()

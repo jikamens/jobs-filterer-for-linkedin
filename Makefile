@@ -54,6 +54,7 @@ firefox/manifest.json: manifest.json Makefile
             .browser_specific_settings.gecko.strict_min_version = \"109.0\" | \
 	    .options_ui.page = \"options.html\" | \
 	    .options_ui.open_in_tab = true | \
+	    .action.default_area = \"navbar\" | \
             del(.background.service_worker, .key, .options_page)" < $< > $@.tmp
 	mv $@.tmp $@
 

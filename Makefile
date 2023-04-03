@@ -97,4 +97,3 @@ button.js: icons/16.png
 	mv $@.tmp $@
 
 .NOTINTERMEDIATE: $(GEN_JS_FILES)
-

@@ -23,3 +23,7 @@ chrome.runtime.onInstalled.addListener(function (object) {
             chrome.tabs.create({url: "changes.html"});
     })
 });
+
+chrome.action.onClicked.addListener(() => {
+    chrome.runtime.openOptionsPage();
+});

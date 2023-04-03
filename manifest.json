@@ -4,6 +4,7 @@
     "version": "0.8",
     "manifest_version": 3,
     "permissions": ["storage"],
+    "action": {},
     "content_scripts": [
         {
             "matches": ["https://www.linkedin.com/*"],

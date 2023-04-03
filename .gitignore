@@ -1,4 +1,6 @@
 .chrome
+*.crx
+*.pem
 *.zip
 button.js
 build

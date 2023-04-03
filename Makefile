@@ -25,6 +25,14 @@ $(NAME).zip: $(foreach f,$(SHIP_FILES),build/$(f))
 	cd build && zip -r $@.tmp $(SHIP_FILES)
 	mv -f build/$@.tmp $@
 
+$(NAME).crx: $(foreach f,$(SHIP_FILES),build/$(f))
+	@if grep 'utils\.debugging.*true' $(SHIP_FILES); then \
+	    echo "Can't ship with debugging enabled" 1>&2; false; \
+	else true; fi
+	rm -f firefox/$@.tmp
+	cd firefox && zip -r $@.tmp $(SHIP_FILES)
+	mv -f firefox/$@.tmp $@
+
 $(NAME)-test.zip: $(foreach f,$(TEST_FILES),build/$(f))
 	rm -f build/$@.tmp
 	cd build && zip -r $@.tmp $(TEST_FILES)
@@ -51,7 +59,7 @@ $(ESLINT):
 	npm install
 
 clean:
-	rm -rf $(NAME).zip $(NAME)-test.zip build $(GEN_JS_FILES)
+	rm -rf *.zip *.crx build $(GEN_JS_FILES)
 
 # "Why isn't utils.js a JavaScript module that's imported into the other files
 # that need its functions?" you ask? Because when it is, then whenever the

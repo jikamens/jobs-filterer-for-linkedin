@@ -8,6 +8,7 @@ build
 classes.log
 content-script.js
 firefox
+geckodriver.log
 node_modules
 options.js
 test-config.yml

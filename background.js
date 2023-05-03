@@ -14,6 +14,15 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+function checkPermissions() {
+    chrome.permissions.contains(
+        {origins: ["https://www.linkedin.com/*"]},
+        (contains) => {
+            if (! contains)
+                chrome.tabs.create({url: "permissions.html"});
+        });
+}
+
 chrome.runtime.onInstalled.addListener(function (object) {
     chrome.storage.sync.get(["showChanges"]).then((options) => {
         if ((options["showChanges"] === undefined ||
@@ -21,9 +30,16 @@ chrome.runtime.onInstalled.addListener(function (object) {
             (object.reason == chrome.runtime.OnInstalledReason.INSTALL ||
              object.reason == chrome.runtime.OnInstalledReason.UPDATE))
             chrome.tabs.create({url: "changes.html"});
-    })
+        // This is in this function so that the permissions page opens _after_
+        // the changelog page so it's on top.
+        checkPermissions();
+    });
 });
 
 chrome.action.onClicked.addListener(() => {
     chrome.runtime.openOptionsPage();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    checkPermissions();
 });

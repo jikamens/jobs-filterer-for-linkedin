@@ -14,9 +14,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-function hideFirefoxSection() {
-    document.getElementById("firefox-permissions").hidden =
-        !navigator.userAgent.includes("Firefox");
-}
-
-document.addEventListener("DOMContentLoaded", hideFirefoxSection);
+document.getElementById("granter").addEventListener("click", () => {
+    chrome.permissions.request({origins: ["https://www.linkedin.com/*"]}).then(
+        (granted) => { if (granted) close(); });
+});

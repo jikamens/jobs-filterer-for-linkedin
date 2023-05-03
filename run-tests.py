@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     NoSuchElementException,
+    NoSuchWindowException,
 )
 from selenium.webdriver.common.by import By
 import tempfile
@@ -85,7 +86,6 @@ def main():
             options.add_argument("--height=1024")
             driver = webdriver.Firefox(options=options)
             driver.install_addon("LinkedInJobsFilterer-test.xpi")
-            input("Grant the extension access to linkedin.com and hit Enter: ")
         try:
             run_tests(config, args, driver)
         finally:
@@ -97,9 +97,25 @@ def run_tests(config, args, driver):
     start = time.time()
     while len(driver.window_handles) == 1 and time.time() - start < 2:
         time.sleep(0.1)
-    driver.switch_to.window(driver.window_handles[1])
+
+    # Does permission need to be granted?
+    time.sleep(1)  # Wait for permissions page to load
+    for window in range(2, len(driver.window_handles)):
+        driver.switch_to.window(driver.window_handles[window])
+        if driver.current_url.endswith("permissions.html"):
+            print("Waiting for access to linkedin.com to be granted.")
+            start = time.time()
+            while time.time() - start < 30:
+                try:
+                    driver.current_url
+                except NoSuchWindowException:
+                    break
+                time.sleep(0.1)
+            else:
+                raise TimeoutError("Giving up waiting for access.")
 
     # Does the changelog page have expected content?
+    driver.switch_to.window(driver.window_handles[1])
     assert "change history" in driver.page_source
     match = re.match(r"(?:chrome|moz)-extension://(.*)/changes\.html$",
                      driver.current_url)

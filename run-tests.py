@@ -115,6 +115,9 @@ def run_tests(config, args, driver):
     driver.find_element(By.ID, "hideJobs")
     options_window_handle = driver.current_window_handle
 
+    hidden = driver.find_element(By.ID, "alt-s").get_attribute("hidden")
+    assert (hidden == "true") is (args.browser != "chrome")
+
     driver.find_element(By.ID, "titles").send_keys("TitleRegexp")
     driver.find_element(By.ID, "companies").send_keys("CompanyRegexp")
     driver.find_element(By.ID, "locations").send_keys("LocationRegexp")

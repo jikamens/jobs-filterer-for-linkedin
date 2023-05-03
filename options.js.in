@@ -249,9 +249,16 @@ function checkForSaveKey(event) {
         saveOptions();
 }
 
+async function DOMLoaded() {
+    if (navigator.userAgent.includes("Firefox"))
+        document.getElementById("alt-s").hidden = true;
+    else
+        document.addEventListener("keydown", checkForSaveKey);
+    await restoreOptions();
+}
+
 chrome.storage.onChanged.addListener(optionsChanged);
-document.addEventListener("DOMContentLoaded", restoreOptions);
+document.addEventListener("DOMContentLoaded", DOMLoaded);
 document.getElementById("save").addEventListener("click", saveOptions);
 document.getElementById("hideJobs").addEventListener("change", saveOptions);
 document.getElementById("showChanges").addEventListener("change", saveOptions);
-document.addEventListener("keydown", checkForSaveKey);

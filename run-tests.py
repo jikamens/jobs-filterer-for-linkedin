@@ -319,7 +319,7 @@ def test_job_on_page(driver, url,
     hide_button.click()
 
     # Is the job hidden now?
-    wait_for(lambda: first_job.get_attribute("hidden"))
+    wait_for(lambda: first_job.get_attribute("hidden") == "true")
 
     # Is the LinkedIn hide button still there, i.e., we didn't do the wrong
     # thing and hide the job via LinkedIn instead of privately?
@@ -362,7 +362,7 @@ def find_first_active_job(driver):
     ordinal = 1
     for elt in log_class(driver.find_elements(By.CSS_SELECTOR, job_selector),
                          is_list=True):
-        if elt.get_attribute("hidden"):
+        if elt.get_attribute("hidden") == "true":
             ordinal += 1
             continue
         if show_you_fewer in elt.get_attribute("innerText"):

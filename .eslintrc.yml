@@ -10,5 +10,6 @@ parserOptions:
 rules: {}
 ignorePatterns:
   - build
+  - firefox
   - button.js
   - utils.js

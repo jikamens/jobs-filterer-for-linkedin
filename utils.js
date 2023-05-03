@@ -107,6 +107,23 @@ var utils = {
         }
         return compiled;
     },
+
+    escapeHTML: function(unsafeText) {
+        let div = document.createElement('div');
+        div.innerText = unsafeText;
+        return div.innerHTML;
+    },
+
+    unparseJobFilters: function(filters) {
+        filters = filters.map(f => {
+            var filter = `${f.title} // ${f.company} // ${f.location}`;
+            if (f.private) {
+                filter += " // private";
+            }
+            return filter;
+        });
+        return filters;
+    },
 };
 
 // Borrowed from https://stackoverflow.com/a/1997811/937306

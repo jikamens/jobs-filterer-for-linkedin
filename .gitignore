@@ -3,6 +3,7 @@
 *.pem
 *.xpi
 *.zip
+backup.js
 button.js
 build
 classes.log

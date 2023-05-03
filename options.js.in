@@ -51,12 +51,6 @@ function getTextAreas(id, results) {
     return diverted;
 }
 
-function escapeHTML(unsafeText) {
-    let div = document.createElement('div');
-    div.innerText = unsafeText;
-    return div.innerHTML;
-}
-
 function checkRegExps(regexps) {
     for (var regexp of regexps) {
         try {
@@ -103,7 +97,7 @@ function parseJobFilters(specStrings) {
 }
 
 function error(msg) {
-    var quoted = escapeHTML(msg);
+    var quoted = utils.escapeHTML(msg);
     document.getElementById("status").innerHTML =
         `<font color="red">${quoted}</font>`;
 }
@@ -186,7 +180,7 @@ async function saveChanges(oldOptions, newOptions) {
         }, 1000);
     }
     catch (error) {
-        var msg = escapeHTML(error.message);
+        var msg = utils.escapeHTML(error.message);
         status.innerHTML =
             `<font color='red'>Error saving options: ${msg}</font>`;
         setTimeout(function() {
@@ -206,13 +200,7 @@ function setTextArea(id, regexps) {
 
 function populateJobsArea(filters) {
     if (! filters) return;
-    filters = filters.map(f => {
-        var filter = `${f.title} // ${f.company} // ${f.location}`;
-        if (f.private) {
-            filter += " // private";
-        }
-        return filter;
-    });
+    filters = utils.unparseJobFilters(filters);
     document.getElementById("jobs").value = filters.join("\n") +
         (filters.length ? "\n" : "");
     

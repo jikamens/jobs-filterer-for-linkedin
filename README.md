@@ -1,4 +1,4 @@
-# LinkedIn Jobs Filterer Chrome Extension
+# LinkedIn Jobs Filterer Chrome and Firefox Extension
 
 LinkedIn's "recommended jobs” and job search functionality are pretty
 good at finding jobs you might be interested in, but unfortunately
@@ -7,33 +7,21 @@ i.e., they show you many jobs you don't care about. Furthermore,
 although there are buttons you can click to supposedly tell LinkedIn
 not to show you a particular job again, it frequently ignores this.
 
-The code here implements a Chrome extension which allows you to
-improve the quality of these lists of jobs by filtering out jobs you
-don't want to see based on regular-expression matches on the job
-title, company name, or location.
+The code here implements a Chrome and Firefox extension which allows
+you to improve the quality of these lists of jobs by filtering out
+jobs you don't want to see based on regular-expression matches on the
+job title, company name, or location.
 
-You can install this extension from the [Chrome Web Store][cws]. You
-can also install it from the source code as described below.
+You can install this extension from the [Chrome Web Store][cws] or
+[Firefox Browser Add-Ons Site][amo]. You can also install it from the
+source code as described below.
 
 Once you've installed the extension, open the options page for the
 extension to configure it and see further instructions for how to use
-it. There are four ways to open the options page for the extension:
-
-1. Paste
-   "`chrome-extension://afjdfegpgbfjgdelebopglhhfkjjblch/options.html`"
-   into the URL bar in Chrome.
-
-2. If you have the extension's icon pinned to your URL bar,
-   right-click or ctrl-click on it and select "Options".
-
-3. If you don't have the extension's icon pinned to your URL bar,
-   click on the puzzle-piece icon to bring up the list of unpinned
-   extensions, then click the three dots to the right of ths one and
-   select "Options".
-
-4. Paste "`chrome://settings`" into the URL bar, click the "Details"
-   button for this extension, and then click the button to the right
-   of "Extension options".
+it. To open the options page, click on the extension's icon (a white
+funnel) in your URL bar. If you don't have the icon pinned to your URL
+bar, click the puzzle-piece icon to open a pop-up menu of unpinned
+extensions and click on LinkedIn Jobs Filterer in that menu.
 
 This extension was written by Jonathan Kamens. If you find this
 extension useful, you can buy me a coffee [here][blog].
@@ -42,20 +30,38 @@ The source code for this extension lives [here][github].
 
 ## Installing from source code
 
+### Chrome
+
 To load this extension into Chrome from source code:
 
 1. Download the source code from Github to your computer, either by
    cloning it with Git or by downloading and unpacking
    [this zip file][zip].
 
-2. Paste "`chrome://extensions`" into your URL bar.
+2. Run `make` in the source directory to build the extension.
 
-3. If the "Developer mode" switch in the upper right corner isn't
+3. Paste "`chrome://extensions`" into your URL bar.
+
+4. If the "Developer mode" switch in the upper right corner isn't
    enabled, enable it.
 
-4. Click the "Load unpacked button".
+5. Click the "Load unpacked" button.
 
-5. Select the directory containing the extension's source code.
+6. Select the directory containing the extension's source code.
+
+### Firefox
+
+Firefox makes it _very difficult_ to install extensions that haven't
+been signed by Mozilla. You'll need to be running a version of Firefox
+that allows this, e.g., [Developer Edition][ffdev],
+[Nightly][ffnightly], or [Unbranded][ffunbranded].
+
+If you are using one of these Firefox versions, then you can set the
+preference `xpinstall.signatures.required` to false by visiting
+`about:config`, then run `make` in the source directory to build
+`LinkedInJobsFilterer.xpi`, then open the add-ons page in Firefox,
+click on the gear icon, select "Install Add-on From File...", and
+browse to the XPI file.
 
 ## Copyright
 
@@ -73,7 +79,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see [here][gpl].
 
 [cws]: https://chrome.google.com/webstore/detail/linkedin-jobs-filterer/afjdfegpgbfjgdelebopglhhfkjjblch/
+[amo]: https://addons.mozilla.org/firefox/addon/linkedin-jobs-filterer/
 [blog]: https://blog.kamens.us/support-my-blog
 [github]: https://github.com/jikamens/linkedin-job-filterer
 [gpl]: https://www.gnu.org/licenses/
 [zip]: https://github.com/jikamens/linkedin-job-filterer/archive/refs/heads/main.zip
+[ffdev]: https://www.mozilla.org/firefox/developer/
+[ffnightly]: https://www.mozilla.org/firefox/nightly/notes/
+[ffunbranded]: https://wiki.mozilla.org/Add-ons/Extension_Signing#Unbranded_Builds

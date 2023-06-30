@@ -219,7 +219,7 @@ def run_tests(config, args, driver):
             linkedin_window_handle, options_window_handle)
         test_job_on_page(
             driver, "https://www.linkedin.com/jobs/search/"
-            "keywords=Quality%20Assurance%20Engineer",
+            "?keywords=Quality%20Assurance%20Engineer",
             linkedin_window_handle, options_window_handle)
     except ElementClickInterceptedException:
         fn = "/tmp/litest_screenshot.png"

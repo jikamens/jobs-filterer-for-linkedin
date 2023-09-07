@@ -15,6 +15,33 @@ import tempfile
 import time
 import yaml
 
+### Workaround for bug in Ubuntu/Debian Python Selenium module
+# In the main body code below, `webdriver.Chrome` has been replaced with
+# `ChromeWebDriver` and `webdriver.Firefox` has been replaced with
+# `FirefoxWebDriver`. These changes can be undone if/when Ubuntu and Debian get
+# around to cleaning up their shit.
+import os
+
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver import Chrome
+
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver import Firefox
+
+
+def ChromeWebDriver(*args, **kwargs):
+    service = ChromeService(executable_path='/usr/bin/chromedriver')
+    return Chrome(*args, service=service, **kwargs)
+
+
+def FirefoxWebDriver(*args, **kwargs):
+    geckodriver = ('/snap/bin/geckodriver'
+                   if os.path.exists('/snap/bin/geckodriver')
+                   else '/usr/local/bin/geckodriver')
+    service = FirefoxService(executable_path=geckodriver)
+    return Firefox(*args, service=service, **kwargs)
+### End workaround code
+
 config_file = "test-config.yml"
 job_selector = (".jobs-search-results__list-item, "
                 ".jobs-job-board-list__item, "
@@ -73,7 +100,7 @@ def main():
             options.add_argument("window-size=1280,1024")
             options.add_argument(f"user-data-dir={user_data_directory}")
             options.add_extension("LinkedInJobsFilterer-test.zip")
-            driver = webdriver.Chrome(options=options)
+            driver = ChromeWebDriver(options=options)
         else:
             url_prefix = "moz-extension"
             options = webdriver.FirefoxOptions()
@@ -84,7 +111,7 @@ def main():
                 options.add_argument("headless")
             options.add_argument("--width=1280")
             options.add_argument("--height=1024")
-            driver = webdriver.Firefox(options=options)
+            driver = FirefoxWebDriver(options=options)
             driver.install_addon("LinkedInJobsFilterer-test.xpi")
         try:
             run_tests(config, args, driver)

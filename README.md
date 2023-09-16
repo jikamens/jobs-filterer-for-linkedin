@@ -1,5 +1,9 @@
 # Jobs Filterer for LinkedIn Chrome and Firefox Extension
 
+**NOTE:** The author of this extension is not affiliated with
+LinkedIn, and this extension is not provided or supported by LinkedIn.
+I'm just a random guy trying to make life easier for LinkedIn users.
+
 LinkedIn's "recommended jobs” and job search functionality are pretty
 good at finding jobs you might be interested in, but unfortunately
 they're pretty bad at finding *only* jobs you might be interested in,

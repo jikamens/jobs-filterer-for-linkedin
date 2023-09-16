@@ -83,7 +83,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see [here][gpl].
 
 [cws]: https://chrome.google.com/webstore/detail/linkedin-jobs-filterer/afjdfegpgbfjgdelebopglhhfkjjblch/
-[amo]: https://addons.mozilla.org/firefox/addon/linkedin-jobs-filterer/
+[amo]: https://addons.mozilla.org/firefox/addon/jobs-filterer-for-linkedin/
 [blog]: https://blog.kamens.us/support-my-blog
 [github]: https://github.com/jikamens/jobs-filterer-for-linkedin
 [gpl]: https://www.gnu.org/licenses/

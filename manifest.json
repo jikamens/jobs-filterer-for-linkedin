@@ -23,7 +23,7 @@
         "service_worker": "background.js"
     },
     "options_page": "options.html",
-    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsa+ec6zvEdNP3hSF6SCwSmu/Fg0niy4KS2f8xDwtLU7MqffhWB6ptmseCyMm4u9x4qcCrwpmsLRkMe6C+1Pp/Tv7UDxP7cYBWrgUjaSUoPV2g4NU9u8fwX7IWxqRdr/y1VnZcmcZ4EBDl6MX6nvPc8Zi2PXiHbF9MoaVAyuViX6Q0BsyMYTSLE+/j6L5OEicgM70SbD/B+TdhU7WYUJGyh23pI5CkFlMxH6VyKSZ/xV29kS/g0XkDI/KNZFTVmPiMiSRPICRZPAkOnXjLKPGs/YBCGP8DxDdz6+FER/gDuT7d3rIW8WSo6eFeAcImQnj1Dwo77Fo8rXNXXIoszkyWQIDAQAB",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0k6S7c/Hnke8nPR4V66Af8JYsV6ULOV2mCqWN7syiyKTBEnz25iLgTO57HldcLN79bwedLKV1EPvq3p/z32FumL6z4/jh6hG5h9SpJ9aSKGxcvlMLzw0CYI+Bmn2VmP+HU1dwi4MmNnpe0RD/BIrXqbAKlfEzJ6Xjakm8CCRTtbbhr96cZxh+OlRSBj9i3rrWzEV+1/4Lcb6tDXIS4xQUKqVsb1O6xxH7OymFHHqdK6kQ11KQXj83asr6AkQuOQ0A59Q6y0YXUGALxvt+UQb/OuFEOLJ5LtwSWPa4HEAkqopqnd6cnrvKKkoTu7UMelbf+y7DUZwowXcdjAzHdJiKwIDAQAB",
     "icons": {
         "16": "icons/16.png",
         "48": "icons/48.png",

@@ -1,4 +1,4 @@
-# LinkedIn Jobs Filterer Chrome and Firefox Extension
+# Jobs Filterer for LinkedIn Chrome and Firefox Extension
 
 LinkedIn's "recommended jobs” and job search functionality are pretty
 good at finding jobs you might be interested in, but unfortunately
@@ -21,7 +21,7 @@ extension to configure it and see further instructions for how to use
 it. To open the options page, click on the extension's icon (a white
 funnel) in your URL bar. If you don't have the icon pinned to your URL
 bar, click the puzzle-piece icon to open a pop-up menu of unpinned
-extensions and click on LinkedIn Jobs Filterer in that menu.
+extensions and click on Jobs Filterer for LinkedIn in that menu.
 
 This extension was written by Jonathan Kamens. If you find this
 extension useful, you can buy me a coffee [here][blog].
@@ -59,7 +59,7 @@ that allows this, e.g., [Developer Edition][ffdev],
 If you are using one of these Firefox versions, then you can set the
 preference `xpinstall.signatures.required` to false by visiting
 `about:config`, then run `make` in the source directory to build
-`LinkedInJobsFilterer.xpi`, then open the add-ons page in Firefox,
+`JobsFiltererForLinkedIn.xpi`, then open the add-ons page in Firefox,
 click on the gear icon, select "Install Add-on From File...", and
 browse to the XPI file.
 
@@ -81,9 +81,9 @@ along with this program. If not, see [here][gpl].
 [cws]: https://chrome.google.com/webstore/detail/linkedin-jobs-filterer/afjdfegpgbfjgdelebopglhhfkjjblch/
 [amo]: https://addons.mozilla.org/firefox/addon/linkedin-jobs-filterer/
 [blog]: https://blog.kamens.us/support-my-blog
-[github]: https://github.com/jikamens/linkedin-job-filterer
+[github]: https://github.com/jikamens/jobs-filterer-for-linkedin
 [gpl]: https://www.gnu.org/licenses/
-[zip]: https://github.com/jikamens/linkedin-job-filterer/archive/refs/heads/main.zip
+[zip]: https://github.com/jikamens/jobs-filterer-for-linkedin/archive/refs/heads/main.zip
 [ffdev]: https://www.mozilla.org/firefox/developer/
 [ffnightly]: https://www.mozilla.org/firefox/nightly/notes/
 [ffunbranded]: https://wiki.mozilla.org/Add-ons/Extension_Signing#Unbranded_Builds

@@ -1,4 +1,4 @@
-NAME=LinkedInJobsFilterer
+NAME=JobsFiltererForLinkedIn
 #
 # The first time this extension was uploaded to the Chrome Web Store the
 # private key was included in it but it doesn't need to be after that and I

@@ -58,7 +58,8 @@ url_prefix = None
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Test LinkedIn Jobs Filterer")
+    parser = argparse.ArgumentParser(
+        description="Test Jobs Filterer for LinkedIn")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--chrome", dest="browser", action="store_const",
                        const="chrome", default="chrome",
@@ -99,7 +100,7 @@ def main():
             # obscuring the first listed job even when Messaging is hidden.
             options.add_argument("window-size=1280,1024")
             options.add_argument(f"user-data-dir={user_data_directory}")
-            options.add_extension("LinkedInJobsFilterer-test.zip")
+            options.add_extension("JobsFiltererForLinkedIn-test.zip")
             driver = ChromeWebDriver(options=options)
         else:
             url_prefix = "moz-extension"
@@ -112,7 +113,7 @@ def main():
             options.add_argument("--width=1280")
             options.add_argument("--height=1024")
             driver = FirefoxWebDriver(options=options)
-            driver.install_addon("LinkedInJobsFilterer-test.xpi")
+            driver.install_addon("JobsFiltererForLinkedIn-test.xpi")
         try:
             run_tests(config, args, driver)
         finally:
